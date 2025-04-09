@@ -16,7 +16,15 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from main_site import views
 
 urlpatterns = [
+    # ! ADMIN
     path('admin/', admin.site.urls),
+    # ! CUSTOMER
+    path('customer/register/', views.get_register_customer, name='get_register_customer'),
+    # ! SELLER
+
+    # ! TEST
+    path('test/', views.get_test, name='get_test'),
 ]
