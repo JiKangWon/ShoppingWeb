@@ -23,8 +23,10 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     # ! CUSTOMER
     path('customer/register/', views.get_register_customer, name='get_register_customer'),
+    path('customer/login/', views.get_login_customer, name='get_login_customer'),
     # ! SELLER
-
+    path('seller/register/', views.get_register_seller, name='get_register_seller'),
+    path('seller/login/', views.get_login_seller, name='get_login_seller'),
     # ! TEST
     path('test/', views.get_test, name='get_test'),
 ]

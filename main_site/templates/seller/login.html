@@ -1,8 +1,7 @@
 {% extends "base/base.html" %}
-{% block style %}
-{% endblock style %}
+{% block style %}{% endblock style %}
 {% block content %}
-<h1>Register form for Customer</h1>
+<h1>Login form for Seller</h1>
 <form method="POST">
     {% csrf_token %}
     <label for="username">
@@ -16,19 +15,7 @@
         Password:
         <input name="password" id="password" type="password" />
     </label>
-    <label for="password_confirm">
-        Password Confirm:
-        <input name="password_confirm" id="password_confirm" type="password" />
-    </label>
-    <label for="name">
-        Name:
-        <input type="text" id="name" name="name">
-    </label>
     <button>SAVE</button>
-</form>
+
 {% endblock content %}
-{% block script %}
-<script>
-    
-</script>
-{% endblock script %}
+{% block script %}{% endblock script %}
