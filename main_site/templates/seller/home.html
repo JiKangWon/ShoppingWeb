@@ -1,1 +1,27 @@
-SELLER HOME {{user.username}}
+{% extends "base/base.html" %}
+{% block style %}{% endblock style %}
+{% block content %}
+SELLER HOME {{user.name}}
+<button onclick="add_product({{user.id}})">Add a new product</button>
+<a href="{% url "get_product_list" user.id %}">My products</a>
+<a href="{% url "get_selling_history" user.id month year %}">Selling History</a>
+<a href="{% url "get_revenue" user.id month year %}">Revenue</a>
+<a href="{% url "get_home_customer" user.id %}">Back to Customer's page</a>
+{% endblock content %}
+{% block script %}
+<script >
+    function add_product(user_id) {
+        const add_product_window = window.open(
+            `/seller/product/add/${user_id}/`,
+            'New product',
+            'width=1000,height=500,left=0,top=0',
+        )
+        let interval = setInterval(function () {
+            if (add_product_window.closed) {
+                clearInterval(interval); // Dừng kiểm tra khi cửa sổ bị đóng
+                location.reload();
+            }
+        }, 1000); // Kiểm tra mỗi giây
+    }
+</script>
+{% endblock script %}

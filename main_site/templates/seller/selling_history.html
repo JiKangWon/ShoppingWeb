@@ -1,0 +1,35 @@
+{% extends "base/base.html" %}
+{% block style %}{% endblock style %}
+{% block content %}
+<a href="{% url "get_selling_history" user.id previous_month previous_year %}"> Previous </a>
+{% if next_month %}
+<a href="{% url "get_selling_history" user.id next_month next_year %}"> Next </a>
+{% endif %}
+<table >
+    <tr >
+        <th >Ordinal</th>
+        <th >Name</th>
+        <th >Image</th>
+        <th >Price</th>
+        <th >Quantity</th>
+        <th >Total</th>
+        <th >Date</th>
+        <th >Customer</th>
+    </tr>
+    {% for row in rows %}
+    <tr >
+        <td > <a href="{% url "get_product_view" row.order_product.product.id %}">{{forloop.counter}}</a> </td>
+        <td > {{row.order_product.product.name}} </td>
+        <td >
+            <img src="{{row.image.image.url}}" alt="Product Image" style="width: 100px;" />
+        </td>
+        <td > {{row.order_product.product.price}} </td>
+        <td > {{row.order_product.quantity}} </td>
+        <td > {{row.order_product.get_total}} </td>
+        <td > {{row.order_product.order.created_at}} </td>
+        <td > {{row.order_product.order.user.name}} </td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock content %}
+{% block script %}{% endblock script %}

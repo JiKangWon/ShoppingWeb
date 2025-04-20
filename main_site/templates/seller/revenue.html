@@ -1,0 +1,32 @@
+{% extends "base/base.html" %}
+{% block style %}{% endblock style %}
+{% block content %}
+<a href="{% url "get_revenue" user.id previous_month previous_year %}">Previous</a>
+{% if next_month %}
+<a href="{% url "get_revenue" user.id next_month next_year %}">Next</a>
+{% endif %}
+<table >
+    <tr >
+        <th >Sunday</th>
+        <th >Monday</th>
+        <th >Tuesday</th>
+        <th >Wednesday</th>
+        <th >Thursday</th>
+        <th >Friday</th>
+        <th >Saturday</th>
+    </tr>
+    {% for week in weeks %}
+    <tr >
+        {% for day in week %}
+        <td >
+            {% if day %}
+            <p >{{day.day | date:"d/m/Y"}}</p>
+            <p >Revenue: {{day.total_formatted}}</p>
+            {% endif %}
+        </td>
+        {% endfor %}
+    </tr>
+    {% endfor %}
+</table>
+{% endblock content %}
+{% block script %}{% endblock script %}

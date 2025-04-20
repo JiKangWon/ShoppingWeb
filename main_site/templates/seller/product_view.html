@@ -1,0 +1,30 @@
+{% extends "base/base.html" %}
+{% block style %}{% endblock style %}
+{% block content %}
+<table >
+    <tr >
+        <th>Name</th>
+        <th>Description</th>
+        <th>Price</th>
+        <th>Stock</th>
+        <th>Category</th>
+        <th>Status</th>
+        <th>Created at</th>
+    </tr>
+    <tr >
+        <td > {{product.name}} </td>
+        <td > {{product.description}} </td>
+        <td > {{product.price}} </td>
+        <td > {{product.stock}} </td>
+        <td > {{product.category.name}} </td>
+        <td > {{product.status}} </td>
+        <td > {{product.created_at}} </td>
+    </tr>
+</table>
+{% for image in images %}
+<img src="{{image.image.url}}" alt="Product Image" style="width: 500px; display:block; margin:20px" />
+{% endfor %}
+<a href="{% url "get_product_edit" product.id %}">Edit</a>
+
+{% endblock content %}
+{% block script %}{% endblock script %}

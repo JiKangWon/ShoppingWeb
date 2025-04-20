@@ -1,7 +1,6 @@
 {% extends "base/base.html" %}
 {% block style %}{% endblock style %}
 {% block content %}
-<h2 >Welcome, {{user.name}} </h2>
-<a href="{% url "get_setting" user.id %}">Setting</a>
+<a href="{% url "get_home_seller" user.id %}">Open seller's page</a>
 {% endblock content %}
 {% block script %}{% endblock script %}

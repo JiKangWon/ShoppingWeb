@@ -1,0 +1,116 @@
+{% extends "base/base.html" %}
+{% block style %}{% endblock style %}
+{% block content %}
+<table >
+    <tr >
+        <th >Ordinal</th>
+        <th >Name</th>
+        <th >Price</th>
+        <th >Stock</th>
+        <th >Status</th>
+        <th >Image</th>
+    </tr>
+{% for product_data in product_data_list %}
+    <tr >
+        <td > <a href="{% url "get_product_view" product_data.product.id %}">{{forloop.counter}}</a> </td>
+        <td > {{product_data.product.name}} </td>
+        <td > {{product_data.product.price}} </td>
+        <td >
+            <span class="quantity" data-product-id="{{ product_data.product.id }}">{{ product_data.product.quantity }}</span>
+            <button onclick="update_quantity({{ product_data.product.id }}, 1)">+</button>
+            <button onclick="update_quantity({{ product_data.product.id }}, -1)">-</button>
+            <div class="error-message" id="error-{{ product_data.product.id }}" style="color: red; display: none;"></div>
+        </td>
+        <td>
+            <span class="status" data-product-id="{{ product_data.product.id }}">{{ product_data.product.status }}</span>
+            <button id="hide-button-{{product_data.product.id}}" onclick="hide_product({{product_data.product.id}})">
+                {% if product_data.product.is_hide %}
+                    Show
+                {% else %}
+                    Hide
+                {% endif %}
+            </button>
+        </td>
+        <td >
+            <img src="{{product_data.image.image.url}}" alt="Product Image" style="width: 500px;" />
+        </td>
+    </tr>
+{% endfor %}
+</table>
+{% endblock content %}
+{% block script %}
+<script >
+function hide_product(product_id){
+    const hideButton = document.getElementById(`hide-button-${product_id}`);
+    const statusElement = document.querySelector(`span.status[data-product-id="${product_id}"]`);
+    const errorElement = document.getElementById(`error-${product_id}`);
+
+    errorElement.style.display = 'none';
+    errorElement.textContent = '';
+
+    fetch(`/hide_product/${product_id}/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCSRFToken(),  // Lấy CSRF token từ cookie
+        },
+    })
+    .then(response => {
+        if (response.status === 400) {
+            throw new Error('Error hiding product');
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            statusElement.textContent = data.new_status;
+            hideButton.textContent = data.button_text;
+        } else {
+            errorElement.textContent = data.error || 'Error hiding product';
+            errorElement.style.display = 'block';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        errorElement.textContent = error.message;
+        errorElement.style.display = 'block';
+    });
+}
+function update_quantity(productId, change) {
+    const quantityElement = document.querySelector(`span.quantity[data-product-id="${productId}"]`);
+    const statusElement = document.querySelector(`span.status[data-product-id="${productId}"]`);
+    const errorElement = document.getElementById(`error-${productId}`);
+
+    errorElement.style.display = 'none';
+    errorElement.textContent = '';
+
+    fetch(`/update_quantity/${productId}/${change}/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCSRFToken(),  // Lấy CSRF token từ cookie
+        },
+    })
+    .then(response => {
+        if (response.status === 400) {
+            throw new Error('Quantity cannot be negative');
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            quantityElement.textContent = data.new_quantity;
+            statusElement.textContent = data.new_status;
+        } else {
+            errorElement.textContent = data.error || 'Error updating quantity';
+            errorElement.style.display = 'block';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        errorElement.textContent = error.message;
+        errorElement.style.display = 'block';
+    });
+}
+</script>
+{% endblock script %}

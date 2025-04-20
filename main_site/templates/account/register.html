@@ -1,0 +1,51 @@
+{% extends "base/base.html" %}
+{% block style %}
+<style >
+    label{
+        display: block;
+        margin-bottom: 10px;
+    }
+</style>
+{% endblock style %}
+{% block content %}
+<form method='POST'>
+    {% csrf_token %}
+    <label for="username">
+        Username:
+        <input type="text" name="username" id="username" required />
+    </label>
+    <label for="password1">
+        Password:
+        <input type="password" name="password1" id="password1" required />
+    </label>
+    <label for="password2">
+        Confirm Password:
+        <input type="password" name="password2" id="password2" required />
+    </label>
+    <label for='name'>
+        Name:
+        <input type="text" name="name" id="name" required />
+    </label>
+    <label for='address'>
+        Address:
+        <select name='address'>
+            {% for address in addresses %}
+            <option value="{{address.id}}">{{ address.get_full_address }}</option>
+            {% endfor %}
+        </select>
+    </label>
+    <label for='address_number'>
+        Address Number:
+        <input type="text" name="address_number" id="address_number" required />
+    </label>
+    <label for='phone_number'>
+        Phone Number:
+        <input type="text" name="phone_number" id="phone_number" required />
+    </label>
+    <button type="submit">Register</button>
+    {% if error %}
+    <p style="color: red">{{ error }}</p>
+    {% endif %}
+</form>
+{% endblock content %}
+{% block script %}{% endblock script %}
