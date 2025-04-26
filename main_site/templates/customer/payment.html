@@ -1,0 +1,35 @@
+{% extends "base/base.html" %}
+{% block style %}{% endblock style %}
+{% block content %}
+<table >
+    <tr>
+        <th>Ordinal</th>
+        <th>Image</th>
+        <th>Name</th>
+        <th>Quantity</th>
+        <th>Price</th>
+        <th>Total</th>
+    </tr>
+    {% for cart in carts %}
+    <tr id="ContentContainer{{cart.cart.product.id}}" >
+        <td>{{forloop.counter}}</td>
+        <td> 
+            <img src="{{cart.image.image.url}}" alt="{{cart.cart.product.name}}" style="width: 100px; height: 100px;" />     
+        </td>
+        <td>{{cart.cart.product.name}}</td>
+        <td>{{cart.cart.set_quantity}}</td>
+        <td>{{cart.cart.product.get_price_formatted}}</td>
+        <td>{{cart.cart.get_total_formatted}}</td>
+    </tr>
+    {% endfor %}
+    <tr >
+        <td colspan="5">
+            <h3 >TOTAL</h3>
+        </td>
+        <td > {{total}} </td>
+    </tr>
+</table>
+<a href="{% url "get_identification" user.id %}">Submit</a>
+{% endblock content %}
+{% block script %}
+{% endblock script %}

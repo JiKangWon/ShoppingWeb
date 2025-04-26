@@ -6,7 +6,32 @@ from django.db import IntegrityError
 from django.utils import timezone
 from datetime import date, timedelta
 import calendar
+import json
+import requests
 # Create your views here.
+
+# ! CHAT BOT:
+def send_message(request, user_id):
+    user = User.objects.get(id=user_id)
+    if request.method =='POST':
+        data = json.loads(request.body)
+        message = data.get('message','Hi')
+        rasa_response = requests.post(
+            'http://localhost:5005/webhooks/rest/webhook',
+            json={'sender': user.username, 'message': message}
+        )
+        response_data = rasa_response.json()
+        bot_message = response_data[0]['text'] if response_data else "Sorry, I didn't understand."
+        Chat.objects.create(
+            user = user,
+            request = message,
+            response = bot_message
+        )
+        return JsonResponse({
+            'request':message,
+            'response':bot_message
+        })
+    return JsonResponse({})
 
 # ! Account:
 def get_login(request):
@@ -54,13 +79,326 @@ def get_setting(request, user_id):
 
 # ! CUSTOMER:
 
+def dec_quantity_in_cart(request, cart_id, change):
+    if request.method == 'POST':
+        cart = Cart.objects.filter(id=cart_id).first()
+        new_quantity = cart.quantity - change
+        # Kiểm tra số lượng không âm
+        if new_quantity < 1:
+            return JsonResponse({
+                'success': False,
+                'error': 'Quantity cannot be less than 1, you can remove it',
+                'error_message' : 'Quantity cannot be less than 1, you can remove it',
+            }, status=400)
+        # Cập nhật status
+        cart.quantity = new_quantity
+        cart.save()
+        return JsonResponse({
+            'success': True,
+            'new_quantity': new_quantity,
+        })
+
+def inc_quantity_in_cart(request, cart_id, change):
+    if request.method == 'POST':
+        cart = Cart.objects.filter(id=cart_id).first()
+        new_quantity = cart.quantity + change
+        # Kiểm tra số lượng không âm
+        if new_quantity > cart.product.quantity:
+            return JsonResponse({
+                'success': False,
+                'error': 'Limit quantity',
+                'error_message': 'limit quantity',
+            }, status=400)
+        # Cập nhật status nếu cần
+        cart.quantity = new_quantity
+        cart.save()
+        return JsonResponse({
+            'success': True,
+            'new_quantity': new_quantity,
+        })
+
+def delete_cart(request, user_id, product_id):
+    if request.method == 'DELETE':
+        user = User.objects.filter(id=user_id).first()
+        product = Product.objects.filter(id=product_id).first()
+        cart = Cart.objects.filter(user=user, product=product).first()
+        cart.delete()
+        return JsonResponse({
+            'success':True,
+            'message':'Remove successfully',
+        })
+
+def add_to_cart(request, user_id, product_id):
+    if request.method == 'POST':
+        user = User.objects.filter(id=user_id).first()
+        product = Product.objects.filter(id=product_id).first()
+        cart_check = Cart.objects.filter(user=user, product=product).first()
+        if cart_check:
+            cart_check.quantity += 1
+            cart_check.save()
+            return JsonResponse({
+                'success': True,
+                'message': f'Product quantity updated in cart',
+                'cart_id': cart_check.id,
+            })
+        else:
+            cart = Cart.objects.create(user=user, product=product, quantity=1)
+            return JsonResponse({
+                'success': True,
+                'message': 'Product added to cart successfully',
+                'cart_id': cart.id,
+            })
+
+def like_product(request, user_id, product_id):
+    if request.method == 'POST':
+        user = User.objects.filter(id=user_id).first()
+        product = Product.objects.filter(id=product_id).first()
+        favorite_check = FavoriteList.objects.filter(user=user, product=product).first()
+        if favorite_check:
+            favorite_check.delete()
+            return JsonResponse({
+                'success': True,
+                'message': 'Product removed from favorites',
+                'button_text': 'Like',
+            })
+        else:
+            favorite = FavoriteList.objects.create(user=user, product=product)
+            return JsonResponse({
+                'success': True,
+                'message': 'Product added to favorites successfully',
+                'favorite_id': favorite.id,
+                'button_text': 'Unlike',
+            })
+
+def get_history(request, user_id):
+    error = None
+    context = {}
+    user = User.objects.filter(id=user_id).first()
+    context['user']=user
+    return render(request, 'customer/history.html', context)
+
+def get_identification(request, user_id):
+    error = None
+    context = {}
+    user = User.objects.filter(id=user_id).first()
+    context['user'] = user
+    cart_items = Cart.objects.filter(user=user)
+    total = sum(cart.get_total() for cart in cart_items)
+    context['total']="{:,.0f} VND".format(total)
+    if request.method =='POST':
+        password = request.POST.get('password')
+        if password != user.password:
+            error = 'Wrong password'
+            context['error']=error
+            return render(request, 'customer/identification.html', context)
+        if user.balance < total:
+            error = 'Not enough balance'
+            context['error']=error
+            return render(request, 'customer/identification.html', context)
+        user.balance -= total
+        user.save()
+        order = Order.objects.create(user=user)
+        for cart in cart_items:
+            seller = cart.product.seller
+            seller.balance += cart.get_total()
+            seller.save()
+            product = cart.product
+            product.quantity -= cart.quantity
+            product.save()
+            order_product = Order_Product.objects.create(
+                order = order,
+                product = product,
+                quantity = cart.quantity,
+            )
+            cart.delete() 
+        return redirect('get_history', user_id)
+    context['error']=error
+    return render(request, 'customer/identification.html', context)
+
+def get_payment(request, user_id):
+    error = None
+    context = {}
+    user = User.objects.filter(id=user_id).first()
+    context['user'] = user
+    cart_items = Cart.objects.filter(user=user)
+    context['total']="{:,.0f} VND".format(sum(cart.get_total() for cart in cart_items))
+    carts = []
+    for cart in cart_items:
+        image = Product_Image.objects.filter(product=cart.product).first()
+        carts.append({
+            'cart': cart,
+            'image': image,
+        })
+    context['carts'] = carts
+    context['error'] = error
+    return render(request,'customer/payment.html',context)
+
+def get_cart(request, user_id):
+    error = None
+    context = {}
+    user = User.objects.filter(id=user_id).first()
+    context['user'] = user
+    cart_items = Cart.objects.filter(user=user)
+    carts = []
+    for cart in cart_items:
+        image = Product_Image.objects.filter(product=cart.product).first()
+        carts.append({
+            'cart': cart,
+            'image': image,
+        })
+    context['carts'] = carts
+    context['error'] = error
+    return render(request,'customer/cart.html',context)
+
+def get_favorite_list(request, user_id):
+    error = None
+    context = {}
+    user = User.objects.filter(id=user_id).first()
+    context['user'] = user
+    favorite_items = FavoriteList.objects.filter(user=user)
+    favorite_list = []
+    for favorite in favorite_items:
+        favorite_list.append({
+            'id': favorite.product.id,
+            'image': Product_Image.objects.filter(product=favorite.product).first(),
+            'name': favorite.product.name,
+            'price': favorite.product.price,
+        })
+    context['favorite_list'] = favorite_list
+    context['error'] = error
+    return render(request,'customer/favorite_list.html',context)
+
+def get_product_view_customer(request,user_id, product_id):
+    error = None
+    context = {}
+    user = User.objects.filter(id=user_id).first()
+    context['user'] = user
+    product = Product.objects.filter(id=product_id).first()
+    images = Product_Image.objects.filter(product=product)
+    context['product'] = {
+        'id': product.id,
+        'images':images,
+        'name':product.name,
+        'price':product.price,
+        'description': product.description,
+        'category': product.category.name,
+        'like': FavoriteList.objects.filter(user=user, product=product),
+        'seller_id': product.seller.id,
+        'seller_name': product.seller.name,
+        'order_product_list' : Order_Product.objects.filter(product=product)
+    }
+    return render(request,'customer/product_view.html',context)
+
+def get_shop(request, user_id, seller_id):
+    error = None
+    context = {}
+    user = User.objects.filter(id=user_id).first()
+    seller = User.objects.filter(id=seller_id).first()
+    context['user'] = user
+    products = Product.objects.exclude(seller=user).filter(seller=seller,status='available')[:20]
+    product_data_list = []
+    for product in products:
+        image = Product_Image.objects.filter(product=product).first()
+        like = FavoriteList.objects.filter(user=user, product=product).first()
+        product_data = {
+            'product': product,
+            'image': image,
+            'like': like if like else None,
+        }
+        product_data_list.append(product_data)
+    has_more = Product.objects.exclude(seller=user).filter(seller=seller, status='available').count() > 20
+    context['init_product_data_list'] = product_data_list
+    context['has_more'] = has_more
+    context['error'] = error
+    context['seller'] = seller
+    return render(request, 'customer/shop.html', context)
+
+def get_search_product(request, search, offset, user_id, seller_id=0):
+    if request.method == 'GET':
+        user = User.objects.filter(id=user_id).first()
+        limit = 20 
+        if seller_id==0:
+            products = Product.objects.exclude(seller=user).filter(status='available', name__icontains=search)[offset:offset + limit]
+            has_more = Product.objects.exclude(seller=user).filter(status='available', name__icontains=search).count() > offset + limit
+        else:
+            seller = User.objects.filter(id=seller_id).first()
+            products = Product.objects.exclude(seller=user).filter(seller=seller, status='available', name__icontains=search)[offset:offset + limit]
+            has_more = Product.objects.exclude(seller=user).filter(seller=seller, status='available', name__icontains=search).count() > offset + limit
+        if 'application/json' in request.headers.get('Accept', ''):
+            # Trả về JSON cho yêu cầu AJAX
+            products_data = []
+            for product in products:
+                image = Product_Image.objects.filter(product=product).first()
+                like_product = FavoriteList.objects.filter(user=user,product=product)
+                products_data.append({
+                    'id': product.id,
+                    'name': product.name,
+                    'price': str(product.price),  
+                    'get_sold': product.get_sold(),
+                    'image_url': image.image.url if image else None,
+                    'like_button_text': 'Unlike' if like_product else 'Like', 
+                })
+            return JsonResponse({
+                'products': products_data,
+                'has_more': has_more,
+                'user_id':user_id,
+            })
+
+def get_more_product(request, offset, user_id, seller_id=0):
+    if request.method == 'GET':
+        user = User.objects.filter(id=user_id).first()
+        print(offset)
+        limit = 20 
+        if seller_id==0:
+            products = Product.objects.exclude(seller=user).filter(status='available')[offset:offset + limit]
+            has_more = Product.objects.exclude(seller=user).filter(status='available').count() > offset + limit
+        else:
+            seller = User.objects.filter(id=seller_id).first()
+            products = Product.objects.exclude(seller=user).filter(seller=seller, status='available')[offset:offset + limit]
+            has_more = Product.objects.exclude(seller=user).filter(seller=seller, status='available').count() > offset + limit
+        if 'application/json' in request.headers.get('Accept', ''):
+            # Trả về JSON cho yêu cầu AJAX
+            products_data = []
+            for product in products:
+                image = Product_Image.objects.filter(product=product).first()
+                like_product = FavoriteList.objects.filter(user=user,product=product)
+                products_data.append({
+                    'id': product.id,
+                    'name': product.name,
+                    'price': str(product.price),  
+                    'get_sold': product.get_sold(),
+                    'image_url': image.image.url if image else None,
+                    'like_button_text': 'Unlike' if like_product else 'Like',
+                })
+            return JsonResponse({
+                'products': products_data,
+                'has_more': has_more,
+                'user_id':user_id,
+            })
+
 def get_home_customer(request, user_id):
     error = None
     context = {}
     user = User.objects.filter(id=user_id).first()
     context['user'] = user
+    products = Product.objects.exclude(seller=user).filter(status='available')[:20]
+    product_data_list = []
+    for product in products:
+        image = Product_Image.objects.filter(product=product).first()
+        like = FavoriteList.objects.filter(user=user, product=product).first()
+        product_data = {
+            'product': product,
+            'image': image,
+            'like': like if like else None,
+        }
+        product_data_list.append(product_data)
+    has_more = Product.objects.exclude(seller=user).filter(status='available').count() > 20
+    context['init_product_data_list'] = product_data_list
+    context['has_more'] = has_more
     context['error'] = error
-    return render(request,'customer/home.html',context)
+    chats = Chat.objects.filter(user=user)
+    context['chats']=chats
+    return render(request, 'customer/home.html', context)
 
 # ! SELLER:
 def get_home_seller(request, user_id):

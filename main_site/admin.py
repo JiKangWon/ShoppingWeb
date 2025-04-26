@@ -55,3 +55,7 @@ class ProductImageAdmin(admin.ModelAdmin):
     list_display = ('id','product')
     search_fields = ('product__name',)
     list_filter = ('product',)
+
+@admin.register(Chat)
+class ChatAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user', 'request', 'response')

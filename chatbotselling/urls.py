@@ -29,6 +29,22 @@ urlpatterns = [
     path('setting/<int:user_id>/', views.get_setting, name='get_setting'),
     # ! CUSTOMER:
     path('customer/home/<int:user_id>/', views.get_home_customer, name='get_home_customer'),
+    path('customer/cart/<int:user_id>/', views.get_cart, name='get_cart'),
+    path('customer/cart/payment/<int:user_id>/', views.get_payment, name='get_payment'),
+    path('customer/favorite/<int:user_id>/', views.get_favorite_list, name='get_favorite_list'),
+    path('customer/shop/view/<int:user_id>/<int:seller_id>/', views.get_shop, name='get_shop'),
+    path('customer/history/<int:user_id>/', views.get_history, name='get_history'),
+    path('customer/cart/payment/identification/<int:user_id>', views.get_identification, name='get_identification'),
+    path('customer/product/view/<int:user_id>/<int:product_id>/', views.get_product_view_customer, name='get_product_view_customer'),
+    path('get_product_home/<int:offset>/<int:user_id>/', views.get_more_product, name='get_more_product'),
+    path('get_search_product/<str:search>/<int:offset>/<int:user_id>/', views.get_search_product, name='get_search_product'),
+    path('get_product_home/<int:offset>/<int:user_id>/<int:seller_id>/', views.get_more_product, name='get_more_product'),
+    path('get_search_product/<str:search>/<int:offset>/<int:user_id>/<int:seller_id>/', views.get_search_product, name='get_search_product'),
+    path('add_to_cart/<int:user_id>/<int:product_id>/', views.add_to_cart, name='add_to_cart'),
+    path('like/<int:user_id>/<int:product_id>/', views.like_product, name='like_product'),
+    path('delete_cart/<int:user_id>/<int:product_id>/', views.delete_cart, name='delete_cart'),
+    path('update_quantity/cart/<int:cart_id>/<int:change>/', views.inc_quantity_in_cart, name='inc_quantity_in_cart'),
+    path('update_quantity/cart/<int:cart_id>/-<int:change>/', views.dec_quantity_in_cart, name='dec_quantity_in_cart'),
     # ! SELLER:
     path('seller/home/<int:user_id>/', views.get_home_seller, name='get_home_seller'),
     path('seller/product/add/<int:user_id>/', views.get_add_product, name='get_add_product'),
@@ -43,4 +59,6 @@ urlpatterns = [
     path('delete_product_image/<int:product_image_id>/', views.delete_product_image, name='delete_product_image'),
     # ! TEST
     path('test/', views.get_test, name='get_test'),
+    # ! CHATBOT:
+    path('chatbot/send-message/<int:user_id>/', views.send_message, name='send_message'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

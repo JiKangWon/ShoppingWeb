@@ -11,6 +11,7 @@ class Address(models.Model):
         return f'{self.street} Street, {self.ward} Ward, {self.district} District, {self.province} Province, {self.country}'
     def get_full_address(self):
         return self.__str__()
+    
 class User(models.Model):
     username = models.CharField(max_length=255, unique=True)
     password = models.CharField(max_length=255)
@@ -50,6 +51,12 @@ class Product(models.Model):
         return self.status == 'hide'
     def get_different_categories(self):
         return Category.objects.exclude(id=self.category.id).distinct()
+    def get_price_formatted(self):
+        return "{:,.0f} VND".format(self.price)
+    def get_sold(self):
+        order_products = Order_Product.objects.filter(product=self)
+        total_sold = sum(order_product.quantity for order_product in order_products)
+        return total_sold
 class Order(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -84,7 +91,15 @@ class Cart(models.Model):
         if self.user and self.product:
             return f'Cart {self.id} of {self.user.username} - {self.product.name}'
         return f'Cart #{self.id}'
-
+    def get_total(self):
+        return self.product.price * self.set_quantity()
+    def get_total_formatted(self):
+        return "{:,.0f} VND".format(self.get_total())
+    def set_quantity(self):
+        new_quantity =  self.quantity if self.quantity <= self.product.quantity else self.product.quantity
+        self.quantity = new_quantity
+        return new_quantity
+    
 class FavoriteList(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
@@ -101,3 +116,8 @@ class Product_Image(models.Model):
         if self.product:
             return f'Image of {self.product.name} #{self.id}'
         return f'Image Link #{self.id}'
+
+class Chat(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    request = models.TextField()
+    response = models.TextField()

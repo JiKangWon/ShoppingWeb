@@ -1,7 +1,238 @@
 {% extends "base/base.html" %}
-{% block style %}{% endblock style %}
+{% load static %}
+{% block style %}
+<link rel="stylesheet" href="{% static "css/chatbot.css" %}" />
+{% endblock style %}
 {% block content %}
-<h2 >Welcome, {{user.name}} </h2>
+    <script src="{% static "js/chatbot.js" %}"></script>
+    <!-- Icon chatbot -->
+    <div class="chat-icon" onclick="toggleChat()">
+        <img src="{% static "img/robot.jpg" %}" alt="LINDA">
+    </div>
+    <!-- Cửa sổ chat -->
+    <div class="chat-window" id="chatWindow">
+        <div class="chat-header">
+            <span id="header-chat-window"> <img id="avatar" src="{% static "img/robot.jpg" %}" /> Linda</span>
+            <div class="controls">
+                <button onclick="toggleSize()">🗖</button>
+                <button onclick="toggleChat()">×</button>
+            </div>
+        </div>
+        <div class="chat-content">
+            <!-- Nội dung chat ở đây -->
+            {% for chat in chats %}
+            <p > [You]: {{chat.request}} </p>
+            <p > [Linda]: {{chat.response}} </p>
+            {% endfor %}
+        </div>
+        <div class="chat-input">
+        <input type="text" id="input-message" name="input-message" placeholder="Send message...">
+            <button onclick="SendMessage({{user.id}})">Send</button>
+        </div>
+    </div>
+<input type="text" id="query" name="query" placeholder="Search products..." required>
+<button type="button" onclick="get_search_product({{user.id}})">Search</button>
 <a href="{% url "get_setting" user.id %}">Setting</a>
+<a href="{% url "get_cart" user.id %}">Cart</a>
+<a href="{% url "get_favorite_list" user.id %}">Favorite</a>
+<div class="product-grid" id="product-grid">
+    {% for product_data in init_product_data_list %}
+    <div class="product-item" data-product-id="{{ product_data.product.id }}">
+        <a href="{% url "get_product_view_customer" user.id product_data.product.id %}">Detail</a>
+        <img src="{{ product_data.image.image.url }}" alt="{{ product_data.product.name }}" style="width: 600px;" />
+        <h3>{{ product_data.product.name }}</h3>
+        <p>Price: {{ product_data.product.get_price_formatted }}</p>
+        <p>{{ product_data.product.get_sold }} sold </p>
+        <button type="button" onclick="add_to_cart({{user.id}},{{product_data.product.id}})">Add to cart</button>
+        <button type="button" onclick="like(this, {{user.id}},{{product_data.product.id}})">
+            {% if product_data.like %}
+            Unlike
+            {% else %}
+            Like
+            {% endif %}
+        </button>
+    </div>
+    {% empty %}
+    <p>No products available.</p>
+    {% endfor %}
+</div>
+<button id="see-more-btn" onclick="loadMoreProducts({{user.id}})">See more</button>
+<div class="error-message" id="error-message"></div>
+
+
+
 {% endblock content %}
-{% block script %}{% endblock script %}
+{% block script %}
+<script>
+let offset = 20;  // Bắt đầu từ vị trí 20 (đã tải 20 sản phẩm ban đầu)
+let hasMore = {{ has_more|yesno:"true,false" }};
+let search_value = ""; 
+
+function add_to_cart(user_id, product_id){
+    fetch(`/add_to_cart/${user_id}/${product_id}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCSRFToken(),
+            },
+        }).then(response => {
+            if (!response.ok){
+                throw new Error(`HTTP error with status: ${response.status}`);
+            }
+            return response.json(); 
+        }).then(data => {
+            if (data.success){
+                alert(data.message);
+            } else {
+                alert("Failed to add product to cart: " + data.error);
+            }
+        }).catch(error => {
+            alert("An error occurred: " + error.message);
+        })
+}
+
+function like(button, user_id, product_id){
+    fetch(`/like/${user_id}/${product_id}/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCSRFToken(),
+        },
+    }).then(response => {
+        if (!response.ok){
+            throw new Error(`HTTP error with status: ${response.status}`);
+        }
+        return response.json();
+    }).then(data => {
+        if (data.success){
+            alert(data.message);
+            button.innerHTML = data.button_text;
+        } else {
+            alert("Failed to like product: " + data.error);
+        }
+    }).catch(error => {
+        alert("An error occurred: " + error.message);
+    })
+}
+
+function loadMoreProducts(user_id) {
+    const button = document.getElementById('see-more-btn');
+    const productGrid = document.getElementById('product-grid');
+    const errorElement = document.getElementById('error-message');
+
+    button.disabled = true; // Khóa nút "See more" để tránh nhấn nhiều lần
+    errorElement.style.display = 'none';
+    errorElement.textContent = '';
+
+    const url = search_value === ""
+        ? `/get_product_home/${offset}/${user_id}/`
+        : `/get_search_product/${search_value}/${offset}/${user_id}/`;
+
+    fetch(url, {
+        method: 'GET',
+        headers: {
+            'Accept': 'application/json',
+        },
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        data.products.forEach(product => {
+            const productItem = document.createElement('div');
+            productItem.className = 'product-item';
+            productItem.setAttribute('data-product-id', product.id);
+            productItem.innerHTML = `
+                <a href="/customer/product/view/${user_id}/${product.id}/">Detail</a>
+                <img src="${product.image_url}" alt="${product.name} " style="width: 600px;" />
+                <h3>${product.name}</h3>
+                <p>Price: $${product.price}</p>
+                <p>${product.sold} sold</p>
+                <button type="button" onclick="add_to_cart(${user_id},${product.id})">Add to cart</button>
+                <button type="button" onclick="like(this, ${user_id},${product.id})">${product.like_button_text}</button>
+            `;
+            productGrid.appendChild(productItem);
+        });
+
+        offset += 20;  // Tăng offset để lần tải tiếp theo lấy các sản phẩm tiếp theo
+        hasMore = data.has_more;
+
+        if (!hasMore) {
+            button.style.display = 'none';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        errorElement.textContent = 'Failed to load more products: ' + error.message;
+        errorElement.style.display = 'block';
+    })
+    .finally(() => {
+        button.disabled = false; // Bỏ khóa nút "See more"
+    });
+}
+
+function get_search_product(user_id){
+    search_value = document.getElementById("query").value;
+    if (search_value === "") {
+        location.reload();  // Nếu không có giá trị tìm kiếm, tải lại trang
+        return;
+    }  
+    const productGrid = document.getElementById('product-grid');
+    const errorElement = document.getElementById('error-message');
+    const button = document.getElementById('see-more-btn');
+
+    button.disabled = true;
+    errorElement.style.display = 'none';
+    errorElement.textContent = '';
+    productGrid.innerHTML = '';  // Xóa nội dung hiện tại của grid sản phẩm
+    offset = 0;  // Đặt lại offset để bắt đầu tải lại từ đầu
+    fetch(`/get_search_product/${search_value}/${offset}/${user_id}/`, {
+        method: 'GET',
+        headers: {
+            'Accept': 'application/json',
+        },
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        data.products.forEach(product => {
+            const productItem = document.createElement('div');
+            productItem.className = 'product-item';
+            productItem.setAttribute('data-product-id', product.id);
+            productItem.innerHTML = `
+                <a href="/customer/product/view/${user_id}/${product.id}/">Detail</a>
+                <img src="${product.image_url}" alt="${product.name} " style="width: 600px;" />
+                <h3>${product.name}</h3>
+                <p>Price: $${product.price}</p>
+                <p>${product.sold} sold</p>
+                <button type="button" onclick="add_to_cart(${user_id},${product.id})">Add to cart</button>
+                <button type="button" onclick="like(this, ${user_id},${product.id})">${product.like_button_text}</button>
+            `;
+            productGrid.appendChild(productItem);
+        });
+
+        offset += 20;  // Tăng offset để lần tải tiếp theo lấy các sản phẩm tiếp theo
+        hasMore = data.has_more;
+
+        if (!hasMore) {
+            button.style.display = 'none';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        errorElement.textContent = 'Failed to load more products: ' + error.message;
+        errorElement.style.display = 'block';
+    })
+    .finally(() => {
+        button.disabled = false;
+    });
+}
+</script>
+{% endblock script %}

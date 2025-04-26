@@ -1,0 +1,81 @@
+{% extends "base/base.html" %}
+{% block style %}{% endblock style %}
+{% block content %}
+<table >
+    <tr >
+        <th >Ordinal</th>
+        <th >Image</th>
+        <th >Name</th>
+        <th >Price</th>
+        <th >Action</th>
+    </tr>
+    {% for product in favorite_list %}
+    <tr id="ContentContainer{{product.id}}">
+        <td > <a href="{% url "get_product_view_customer" user.id product.id %}">{{forloop.counter}}</a> </td>
+        <td > 
+            <img src="{{product.image.image.url}}" alt="{{product.name}}" style="width: 100px; height: 100px;" />    
+        </td>
+        <td > {{product.name}} </td>
+        <td > {{product.price}} </td>
+        <td >
+            <button type="button" onclick="add_to_cart({{user.id}}, {{product.id}})" >Add to cart</button>
+            <button type="button" onclick="remove(this, {{user.id}},{{product.id}})">Remove</button>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock content %}
+{% block script %}
+<script >
+function add_to_cart(user_id, product_id){
+    fetch(`/add_to_cart/${user_id}/${product_id}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCSRFToken(),
+            },
+        }).then(response => {
+            if (!response.ok){
+                throw new Error(`HTTP error with status: ${response.status}`);
+            }
+            return response.json(); 
+        }).then(data => {
+            if (data.success){
+                alert(data.message);
+            } else {
+                alert("Failed to add product to cart: " + data.error);
+            }
+        }).catch(error => {
+            alert("An error occurred: " + error.message);
+        })
+}
+
+function remove(button, user_id, product_id){
+    const content_container_id = `ContentContainer${product_id}`;
+    const content_container = document.getElementById(content_container_id)
+    fetch(`/like/${user_id}/${product_id}/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCSRFToken(),
+        },
+    }).then(response => {
+        if (!response.ok){
+            throw new Error(`HTTP error with status: ${response.status}`);
+        }
+        return response.json();
+    }).then(data => {
+        if (data.success){
+            alert(data.message);
+            if (data.button_text === "Like") {
+                content_container.style.display = "none";
+            }
+        } else {
+            alert("Failed to like product: " + data.error);
+        }
+    }).catch(error => {
+        alert("An error occurred: " + error.message);
+    })
+}
+</script>
+{% endblock script %}
