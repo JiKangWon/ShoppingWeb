@@ -59,3 +59,7 @@ class ProductImageAdmin(admin.ModelAdmin):
 @admin.register(Chat)
 class ChatAdmin(admin.ModelAdmin):
     list_display = ('id', 'user', 'request', 'response')
+
+@admin.register(User_Face)
+class User_FaceAdmin(admin.ModelAdmin):
+    list_display = ('id','user')

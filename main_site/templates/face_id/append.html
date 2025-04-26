@@ -1,0 +1,13 @@
+{% extends "base/base.html" %}
+{% load static %}
+{% block style %}
+<link rel="stylesheet" href="{% static "css/face_id.css" %}" />
+{% endblock style %}
+{% block content %}
+<video id="video" autoplay></video>
+<canvas id="canvas"></canvas>
+<button onclick="startAutoCapture({{user.id}})">Xác thực Face ID</button>
+{% endblock content %}
+{% block script %}
+<script src="{% static "js/face_id.js" %}"></script>
+{% endblock script %}

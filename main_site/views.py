@@ -4,11 +4,93 @@ from django.views.decorators.csrf import csrf_exempt
 from .models import *
 from django.db import IntegrityError
 from django.utils import timezone
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 import calendar
 import json
 import requests
+import base64
+from django.conf import settings
+import logging
+import os
 # Create your views here.
+
+# ! FACE ID:
+def get_append_face_id(request, user_id):
+    error = None
+    context = {}
+    user =User.objects.filter(id=user_id).first()
+    context['user']=user
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        image_data = data.get('image')
+
+        # Tách phần header của base64 (e.g., "data:image/png;base64,")
+        format, imgstr = image_data.split(';base64,')
+        ext = format.split('/')[-1]  # Lấy phần mở rộng (e.g., png, jpg)
+
+        img_data = base64.b64decode(imgstr)
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S_%f')
+        file_name = f'face_{user_id}_{timestamp}.{ext}'
+
+        # Lưu ảnh tạm thời
+        temp_file_path = os.path.join(settings.MEDIA_ROOT, 'face_images', file_name)
+        os.makedirs(os.path.dirname(temp_file_path), exist_ok=True)
+        with open(temp_file_path, 'wb') as f:
+            f.write(img_data)
+        # Lưu vào model User_Face
+        face_image = User_Face.objects.create(
+            user=user,
+            face=f'face_images/{file_name}'  # Đường dẫn tương đối
+        )
+        return JsonResponse({
+            'status': 'success',
+            'message': f'Ảnh {file_name} đã được lưu cho user {user_id}',
+            'image_id': face_image.id
+        }, status=200)
+    context['error']=error
+    return render(request, 'face_id/append.html', context)
+
+def get_faces(request, user_id):
+    if request.method =='GET':
+        user = User.objects.filter(id=user_id).first()
+        faces = User_Face.objects.filter(user=user)
+        face_urls = [{'url': request.build_absolute_uri(face.face.url)} for face in faces if face.face]
+        return JsonResponse(face_urls, safe=False)
+
+def get_face_identification(request, user_id):
+    error = None
+    context = {}
+    user = User.objects.filter(id=user_id).first()
+    context['user']=user
+    cart_items = Cart.objects.filter(user=user)
+    total = sum(cart.get_total() for cart in cart_items)
+    context['total']="{:,.0f} VND".format(total)
+    if request.method =='POST':
+        if user.balance < total:
+            error = 'Not enough balance'
+            context['error']=error
+            return render(request, 'customer/identification.html', context)
+        user.balance -= total
+        user.save()
+        order = Order.objects.create(user=user)
+        for cart in cart_items:
+            seller = cart.product.seller
+            seller.balance += cart.get_total()
+            seller.save()
+            product = cart.product
+            product.quantity -= cart.quantity
+            product.save()
+            order_product = Order_Product.objects.create(
+                order = order,
+                product = product,
+                quantity = cart.quantity,
+            )
+            cart.delete() 
+        return JsonResponse({})
+    context['error']=error
+    return render(request, 'face_id/identification.html', context)
+
+
 
 # ! CHAT BOT:
 def send_message(request, user_id):

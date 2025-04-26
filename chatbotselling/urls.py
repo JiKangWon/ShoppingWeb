@@ -61,4 +61,13 @@ urlpatterns = [
     path('test/', views.get_test, name='get_test'),
     # ! CHATBOT:
     path('chatbot/send-message/<int:user_id>/', views.send_message, name='send_message'),
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    # ! FACE ID:
+    path('face/append/<int:user_id>/', views.get_append_face_id, name='get_append_face_id'),
+    path('face/identification/<int:user_id>/', views.get_face_identification, name='get_face_identification'),
+    path('user_faces/<int:user_id>/', views.get_faces, name="get_faces"),
+] 
+# Serve media files (for User_Face ImageField)
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+# Serve face_id_model directory from project root
+urlpatterns += static('/face_id_model/', document_root=settings.BASE_DIR / 'face_id_model')

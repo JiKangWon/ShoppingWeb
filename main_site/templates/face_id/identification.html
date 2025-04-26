@@ -1,0 +1,21 @@
+{% extends "base/base.html" %}
+{% load static %}
+{% block style %}
+<link rel="stylesheet" href="{% static "css/face_id.css" %}" />
+{% endblock style %}
+{% block content %}
+<div id="user-id" data-my-value="{{user.id}}"></div>
+<h1 >Verify your face for payment!</h1>
+<h2 >Total {{total}} </h2>
+<video id="video" autoplay></video>
+<canvas id="canvas"></canvas>
+<div id="container"></div>
+{% endblock content %}
+{% block script %}
+<script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.js"
+	integrity="sha256-JOJ7NmVm2chxYZ1KPcAYd2bwVK7NaFj9QKMp7DClews=" 
+	crossorigin="anonymous"></script>
+<script >
+</script>
+<script src="{% static "js/face_id_payment.js" %}"></script>
+{% endblock script %}

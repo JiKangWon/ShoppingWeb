@@ -1,0 +1,17 @@
+body {
+    width: 100vw; 
+    height:100vh; 
+    display:  flex; 
+    flex-direction: column; 
+    justify-content: center; 
+    align-items: center;
+}
+video { 
+    border: 2px solid #333; 
+    max-width: 2000px; 
+    max-height: 2000px; 
+    border-radius: 50%;
+}
+canvas { 
+    display: none; 
+}

@@ -121,3 +121,7 @@ class Chat(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     request = models.TextField()
     response = models.TextField()
+
+class User_Face(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    face = models.ImageField(upload_to='face_images/', null=True, blank=True)
