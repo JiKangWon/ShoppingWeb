@@ -524,10 +524,6 @@ def get_add_product(request, user_id):
             status = status,
         )
         images = request.FILES.getlist('images')
-        if images:
-            print('YES')
-        else:
-            print('NO')
         for image in images:
             product_image = Product_Image.objects.create(product=new_product, image=image)
         script = """
