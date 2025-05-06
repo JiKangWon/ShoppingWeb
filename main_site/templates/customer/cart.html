@@ -1,98 +1,220 @@
 {% extends "base/base.html" %}
-{% block style %}{% endblock style %}
+
+{% block style %}
+<style>
+  body {
+    background-color: #f0f8ff;
+    font-family: 'Segoe UI', sans-serif;
+  }
+
+  table {
+    width: 95%;
+    margin: 40px auto;
+    border-collapse: collapse;
+    box-shadow: 0 4px 20px rgba(0, 123, 255, 0.1);
+    background-color: white;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  th, td {
+    padding: 16px 20px;
+    text-align: center;
+    border-bottom: 1px solid #e0f0ff;
+  }
+
+  th {
+    background-color: #007bff;
+    color: white;
+    font-weight: 600;
+  }
+
+  tr:last-child td {
+    border-bottom: none;
+  }
+
+  img {
+    max-width: 80px;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    margin: 0 3px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+
+  button:hover {
+    background-color: #0056b3;
+  }
+
+  .quantity {
+    font-weight: bold;
+    color: #333;
+    display: inline-block;
+    margin: 0 5px;
+  }
+
+  a {
+    display: block;
+    text-align: center;
+    margin: 30px auto;
+    text-decoration: none;
+    background-color: #28a745;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 10px;
+    width: fit-content;
+    font-weight: 600;
+    transition: background-color 0.3s;
+  }
+
+  a:hover {
+    background-color: #218838;
+  }
+
+  .alert {
+    color: red;
+    font-size: 0.9rem;
+    margin-top: 5px;
+  }
+
+  @media (max-width: 768px) {
+    table, thead, tbody, th, td, tr {
+      display: block;
+    }
+
+    thead {
+      display: none;
+    }
+
+    tr {
+      margin-bottom: 20px;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 10px;
+    }
+
+    td {
+      text-align: right;
+      position: relative;
+      padding-left: 50%;
+    }
+
+    td::before {
+      content: attr(data-label);
+      position: absolute;
+      left: 20px;
+      font-weight: bold;
+      color: #007bff;
+      text-align: left;
+    }
+  }
+</style>
+{% endblock style %}
+
 {% block content %}
-<table >
+<table>
+  <thead>
     <tr>
-        <th>Ordinal</th>
-        <th>Image</th>
-        <th>Name</th>
-        <th>Quantity</th>
-        <th>Price</th>
-        <th>Total</th>
-        <th >Action</th>
+      <th>Ordinal</th>
+      <th>Image</th>
+      <th>Name</th>
+      <th>Quantity</th>
+      <th>Price</th>
+      <th>Total</th>
+      <th>Action</th>
     </tr>
+  </thead>
+  <tbody>
     {% for cart in carts %}
-    <tr id="ContentContainer{{cart.cart.product.id}}" >
-        <td>{{forloop.counter}}</td>
-        <td> 
-            <img src="{{cart.image.image.url}}" alt="{{cart.cart.product.name}}" style="width: 100px; height: 100px;" />     
-        </td>
-        <td>{{cart.cart.product.name}}</td>
-        <td>
-            <span class="quantity" data-product-id="{{ cart.cart.id }}">{{cart.cart.set_quantity}}</span>
-            <button onclick="update_quantity({{ cart.cart.id }}, 1)">+</button>
-            <button onclick="update_quantity({{ cart.cart.id }}, -1)">-</button>
-            <div id="error-{{cart.cart.id}}" style="color: red; display: none;"></div>
-        </td>
-        <td>{{cart.cart.product.get_price_formatted}}</td>
-        <td>{{cart.cart.get_total_formatted}}</td>
-        <td >
-            <button type="button" onclick="remove({{user.id}},{{cart.cart.product.id}})">Remove</button>
-        </td>
+    <tr id="ContentContainer{{cart.cart.product.id}}">
+      <td data-label="Ordinal">{{ forloop.counter }}</td>
+      <td data-label="Image">
+        <img src="{{ cart.image.image.url }}" alt="{{ cart.cart.product.name }}">
+      </td>
+      <td data-label="Name">{{ cart.cart.product.name }}</td>
+      <td data-label="Quantity">
+        <span class="quantity" data-product-id="{{ cart.cart.id }}">{{ cart.cart.set_quantity }}</span>
+        <button onclick="update_quantity({{ cart.cart.id }}, 1)">+</button>
+        <button onclick="update_quantity({{ cart.cart.id }}, -1)">-</button>
+        <div id="error-{{ cart.cart.id }}" class="alert" style="display: none;"></div>
+      </td>
+      <td data-label="Price">{{ cart.cart.product.get_price_formatted }}</td>
+      <td data-label="Total">{{ cart.cart.get_total_formatted }}</td>
+      <td data-label="Action">
+        <button onclick="remove({{ user.id }}, {{ cart.cart.product.id }})">Remove</button>
+      </td>
     </tr>
     {% endfor %}
+  </tbody>
 </table>
-<a href="{% url "get_payment" user.id %}">Payment</a>
-{% endblock content %}
-{% block script %}
-<script >
-function update_quantity(cart_id, change) {
-    const quantityElement = document.querySelector(`span.quantity[data-product-id="${cart_id}"]`);
-    const errorElement = document.getElementById(`error-${cart_id}`);
-    errorElement.style.display = 'none';
-    errorElement.textContent = '';
 
-    fetch(`/update_quantity/cart/${cart_id}/${change}/`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCSRFToken(),  // Lấy CSRF token từ cookie
-        },
-    })
-    .then(response => {
-        if (response.status === 400) {
-            throw new Error("Limit quantity!");
-        }
-        return response.json();
-    })
-    .then(data => {
-        if (data.success) {
-            quantityElement.textContent = data.new_quantity;
-        } else {
-            errorElement.textContent = data.error || 'Error updating quantity';
-            errorElement.style.display = 'block';
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        errorElement.textContent = error.message;
-        errorElement.style.display = 'block';
-    });
+<a href="{% url 'get_payment' user.id %}">Proceed to Payment</a>
+{% endblock content %}
+
+{% block script %}
+<script>
+function getCSRFToken() {
+  const cookieValue = document.cookie.match('(^|;)\\s*csrftoken\\s*=\\s*([^;]+)');
+  return cookieValue ? cookieValue.pop() : '';
 }
 
-function remove(user_id, product_id){
-    const content_container_id = `ContentContainer${product_id}`;
-    const content_container = document.getElementById(content_container_id);
-    if (confirm("Do you want to remove this product from this list")){
-        fetch(`/delete_cart/${user_id}/${product_id}/`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCSRFToken(),
-            },
-        }).then(response => {
-            if (!response.ok){
-                throw new Error(`HTTP error with status: ${response.status}`);
-            }
-            return response.json();
-        }).then(data => {
-            alert(data.message);
-            if (!data.success){
-                return;
-            }
-            content_container.style.display = 'none';
-        })
+function update_quantity(cart_id, change) {
+  const quantityElement = document.querySelector(`span.quantity[data-product-id="${cart_id}"]`);
+  const errorElement = document.getElementById(`error-${cart_id}`);
+  errorElement.style.display = 'none';
+  errorElement.textContent = '';
+
+  fetch(`/update_quantity/cart/${cart_id}/${change}/`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': getCSRFToken(),
+    },
+  })
+  .then(response => {
+    if (response.status === 400) throw new Error("Limit quantity!");
+    return response.json();
+  })
+  .then(data => {
+    if (data.success) {
+      quantityElement.textContent = data.new_quantity;
+    } else {
+      errorElement.textContent = data.error || 'Error updating quantity';
+      errorElement.style.display = 'block';
     }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    errorElement.textContent = error.message;
+    errorElement.style.display = 'block';
+  });
+}
+
+function remove(user_id, product_id) {
+  const content_container = document.getElementById(`ContentContainer${product_id}`);
+  if (confirm("Do you want to remove this product from the list?")) {
+    fetch(`/delete_cart/${user_id}/${product_id}/`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCSRFToken(),
+      },
+    }).then(response => {
+      if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
+      return response.json();
+    }).then(data => {
+      alert(data.message);
+      if (data.success) content_container.style.display = 'none';
+    });
+  }
 }
 </script>
 {% endblock script %}
