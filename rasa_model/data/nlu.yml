@@ -89,3 +89,24 @@ nlu:
     - are you a human?
     - am I talking to a bot?
     - am I talking to a human?
+
+- intent: ask_product
+  examples: |
+    - I want to find [T-shirts](product) for men
+    - Show me [smartphones](product)
+    - Do you have any [running shoes](product)?
+    - I'm looking for a gaming laptop
+
+- intent: ask_gift
+  examples: |
+    - Suggest birthday gifts for a friend
+    - Gift ideas for Mother’s Day
+    - Valentine’s Day gift for wife
+    - I need a gift for Christmas
+
+- intent: ask_support
+  examples: |
+    - How do I return an order?
+    - I need help with an exchange
+    - I want to talk to customer support
+    - How can I file a complaint?

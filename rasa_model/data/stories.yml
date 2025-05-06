@@ -28,3 +28,26 @@ stories:
   - action: utter_did_that_help
   - intent: deny
   - action: utter_goodbye
+
+- story: Find product
+  steps:
+    - intent: ask_product
+    - action: utter_ask_product
+    - slot_was_set:
+      - product: "t-shirt"
+    - action: action_search_product
+    - action: utter_did_that_help
+
+- story: Recommend gift
+  steps:
+    - intent: ask_gift
+    - action: utter_ask_gift
+    - slot_was_set:
+      - occasion: "sinh nhật"
+    - action: action_recommend_gift
+    - action: utter_did_that_help
+
+- story: Support customer
+  steps:
+    - intent: ask_support
+    - action: utter_support_info

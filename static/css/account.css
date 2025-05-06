@@ -1,0 +1,28 @@
+#function-container{
+    background-color: rgb(246, 246, 255);
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+.function-item{
+    width: 18%;
+    height: 20%;
+    background-color: #fff;
+    border-radius: 12px;
+    color: #0052e6;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    border: 2px solid #0052e6;
+}
+.function-item:hover{
+    margin-top: -15px;
+    background-color: #0052e6;
+    color: #fff;
+    cursor: pointer;
+}

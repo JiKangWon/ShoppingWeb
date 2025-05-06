@@ -8,26 +8,60 @@ intents:
   - mood_great
   - mood_unhappy
   - bot_challenge
+  - ask_product
+  - ask_gift
+  - ask_support
+
+entities:
+  - product
+  - occasion
+
+slots:
+  product:
+    type: text
+    mappings:                         # ← thêm phần này
+      - type: from_entity
+        entity: product
+
+  occasion:
+    type: text
+    mappings:                         # ← và phần này
+      - type: from_entity
+        entity: occasion
 
 responses:
   utter_greet:
-  - text: "Hey! How are you?"
+    - text: "Hello! How can I help you today?"
 
-  utter_cheer_up:
-  - text: "Here is something to cheer you up:"
-    image: "https://i.imgur.com/nGF1K8f.jpg"
+  utter_ask_product:
+    - text: "Which product are you interested in? For example: smartphones, books, clothing…"
+
+  utter_ask_gift:
+    - text: "What’s the occasion? That will help me recommend the perfect gift."
+
+  utter_support_info:
+    - text: |
+        You can reach our support at {email} or call us at {phone}. We’re here to help!
 
   utter_did_that_help:
-  - text: "Did that help you?"
+    - text: "Did that help you?"
 
   utter_happy:
-  - text: "Great, carry on!"
+    - text: "Glad to hear that! 😊"
 
   utter_goodbye:
-  - text: "Bye"
+    - text: "Goodbye! Have a great day."
+
+  utter_cheer_up:
+    - text: "Here’s something to cheer you up:"
+      image: "https://i.imgur.com/nGF1K8f.jpg"
 
   utter_iamabot:
-  - text: "I am a bot, powered by Rasa."
+    - text: "I am a bot powered by Nguyen Chi Cuong."
+
+actions:
+  - action_search_product
+  - action_recommend_gift
 
 session_config:
   session_expiration_time: 60
