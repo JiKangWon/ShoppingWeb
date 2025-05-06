@@ -159,6 +159,51 @@ def get_setting(request, user_id):
     context['user'] = user
     return render(request,'account/setting.html',context)
 
+# todo: viết các hàm trả về trang: 1. Xem/sửa thông tin 2. Đổi mật khẩu 3. Lịch sử mua hàng
+def get_information(request, user_id):
+    error = None
+    context = {}    
+    user = User.objects.filter(id=user_id).first()
+    context['user']=user
+    addresses = Address.objects.all().exclude(id=user.address.id)
+    context['addresses'] = addresses
+    if request.method == 'POST':    
+        name = request.POST.get('name')
+        phone = request.POST.get('phone')
+        address_number = int(request.POST.get('address-number'))
+        address_id = int(request.POST.get('address-id'))
+        address = Address.objects.filter(id=address_id).first()
+        user.name = name
+        user.phone = phone
+        user.address_number = address_number
+        user.address = address
+        user.save()
+        return redirect('get_setting', user_id)
+    context['error']=error
+    return render(request, 'account/information.html', context)
+
+def get_change_password(request, user_id):
+    error = None
+    context = {}
+    user = User.objects.filter(id=user_id).first()
+    context['user']=user
+    if request.method == "POST":
+        old_password = request.POST.get('old-password')
+        new_password = request.POST.get('new-password')
+        confirm_password = request.POST.get('confirm-password')
+        if old_password != user.password:
+            error = "Wrong password!"
+            context['error']=error
+            return render(request, 'account/change_password.html', context)
+        if new_password != confirm_password:
+            error = "new password doesn't match!"
+            context['error']=error
+            return render(request, 'account/change_password.html', context)
+        user.password = new_password
+        user.save()
+        return redirect('get_login')
+    return render(request, 'account/change_password.html', context)
+
 # ! CUSTOMER:
 
 def dec_quantity_in_cart(request, cart_id, change):
@@ -257,6 +302,9 @@ def get_history(request, user_id):
     context = {}
     user = User.objects.filter(id=user_id).first()
     context['user']=user
+    orders = Order_Product.objects.filter(order__user=user)
+    context['orders']=orders
+    context['error']=error
     return render(request, 'customer/history.html', context)
 
 def get_identification(request, user_id):
@@ -549,6 +597,8 @@ def get_product_list(request, user_id):
         }
         product_data_list.append(product_data)
     context['product_data_list'] = product_data_list
+    context['month'] = timezone.now().month
+    context['year'] = timezone.now().year
     return render(request,'seller/product_list.html',context)
 
 def get_selling_history(request, user_id, month, year):
@@ -576,6 +626,8 @@ def get_selling_history(request, user_id, month, year):
     if not (month == timezone.now().month and year == timezone.now().year):
         context['next_month'] = next_month
         context['next_year'] = next_year
+    context['month'] = timezone.now().month
+    context['year'] = timezone.now().year
     return render(request,'seller/selling_history.html',context)
 
 def get_revenue(request, user_id, month, year):
@@ -621,6 +673,8 @@ def get_revenue(request, user_id, month, year):
     if not (month == timezone.now().month and year == timezone.now().year):
         context['next_month'] = next_month
         context['next_year'] = next_year
+    context['month'] = timezone.now().month
+    context['year'] = timezone.now().year
     return render(request,'seller/revenue.html',context)
 
 def get_product_view(request, product_id):
@@ -630,6 +684,9 @@ def get_product_view(request, product_id):
     context['product'] = product
     images = Product_Image.objects.filter(product=product)
     context['images'] = images
+    context['month'] = timezone.now().month
+    context['year'] = timezone.now().year
+    context['user'] = product.seller
     return render(request,'seller/product_view.html',context)
 
 def get_product_edit(request, product_id):
@@ -665,6 +722,9 @@ def get_product_edit(request, product_id):
             for image in images:
                 product_image = Product_Image.objects.create(product=product, image=image)
         return redirect('get_product_view', product_id=product.id)
+    context['month'] = timezone.now().month
+    context['year'] = timezone.now().year
+    context['user']=product.seller
     return render(request,'seller/product_edit.html',context)
 
 def dec_quantity(request, product_id, change):

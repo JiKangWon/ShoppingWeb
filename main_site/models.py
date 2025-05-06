@@ -1,6 +1,10 @@
 from django.db import models
 
 # Create your models here.
+
+def get_formatted_money(money):
+    return "{:,.0f} VND".format(money)
+
 class Address(models.Model):
     country = models.CharField(max_length=100, default='Việt Nam')
     province = models.CharField(max_length=100, default='Thành phố Hồ Chí Minh')
@@ -25,6 +29,8 @@ class User(models.Model):
         return self.username
     def get_full_address(self):
         return f'{self.address_number} {self.address.__str__()}'
+    def get_formatted_balance(self):
+        return get_formatted_money(self.balance)
     
 class Category(models.Model):
     name = models.CharField(max_length=100, unique=True)
@@ -53,10 +59,13 @@ class Product(models.Model):
         return Category.objects.exclude(id=self.category.id).distinct()
     def get_price_formatted(self):
         return "{:,.0f} VND".format(self.price)
+    def get_formatted_price(self):
+        return get_formatted_money(self.price)
     def get_sold(self):
         order_products = Order_Product.objects.filter(product=self)
         total_sold = sum(order_product.quantity for order_product in order_products)
         return total_sold
+
 class Order(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -79,6 +88,10 @@ class Order_Product(models.Model):
             return 'Arrived'
         else:
             return 'On the way'
+    def get_total(self):
+        return self.product.price * self.quantity
+    def get_formatted_total(self):
+        return get_formatted_money(self.get_total())
     def __str__(self):
         return f'Order {self.order.id} - Product {self.product.name}'
 

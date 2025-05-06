@@ -1,32 +1,111 @@
 {% extends "base/base.html" %}
-{% block style %}{% endblock style %}
+{% load static %}
+{% block style %}
+<link rel="stylesheet" href="{% static "css/selling_system.css" %}" />
+{% endblock style %}
 {% block content %}
-<a href="{% url "get_revenue" user.id previous_month previous_year %}">Previous</a>
-{% if next_month %}
-<a href="{% url "get_revenue" user.id next_month next_year %}">Next</a>
-{% endif %}
-<table >
-    <tr >
-        <th >Sunday</th>
-        <th >Monday</th>
-        <th >Tuesday</th>
-        <th >Wednesday</th>
-        <th >Thursday</th>
-        <th >Friday</th>
-        <th >Saturday</th>
-    </tr>
-    {% for week in weeks %}
-    <tr >
-        {% for day in week %}
-        <td >
-            {% if day %}
-            <p >{{day.day | date:"d/m/Y"}}</p>
-            <p >Revenue: {{day.total_formatted}}</p>
-            {% endif %}
-        </td>
-        {% endfor %}
-    </tr>
-    {% endfor %}
-</table>
+<div id="main-container" class="row">
+    <div id="left-container" class="col-2 child-main-container">
+        <div id="main-icon-container">
+            <img src="{% static "img/chatbot2.jpg" %}" alt="main icon" id="main-icon" />
+            <p class="main-title-container">SELLING SYSTEM</p>
+            <p class="user-name-container"> User: {{user.name}} </p>
+        </div>
+        <div id="button-container">
+            <div class="button-item" onclick="location.href='{% url "get_home_seller" user.id %}'" >
+                <img alt="button icon" src="{% static "img/home.png" %}" class="button-icon" />
+                Home
+            </div>
+            <div class="button-item" onclick="add_product({{user.id}})">
+                <img alt="button icon" src="{% static "img/add.png" %}" class="button-icon" />
+                New product
+            </div>
+            <div class="button-item" onclick="location.href='{% url "get_product_list" user.id %}'">
+                <img alt="button icon" src="{% static "img/product.png" %}" class="button-icon" />
+                My products
+            </div>
+            <div class="button-item" onclick="location.href='{% url "get_selling_history" user.id month year %}'">
+                <img alt="button icon" src="{% static "img/history.png" %}" class="button-icon" />
+                Selling history
+            </div>
+            <div class="button-item selected" onclick="location.href='{% url "get_revenue" user.id month year %}'" >
+                <img alt="button icon" src="{% static "img/revenue.png" %}" class="button-icon" />
+                Revenue
+            </div>
+        </div>
+        <div id="extra-left-container">
+            
+        </div>
+    </div>
+    <div id="body-container" class="col-7 child-main-container">
+        <div class="body-content">
+            <div class="calendar-container">
+                <div class="btn-nav">
+                    <button class="define-btn hide-btn" onclick="location.href='{% url "get_revenue" user.id previous_month previous_year %}'">Previous</button>
+                    {% if next_month %}
+                    <button class="define-btn hide-btn" onclick="location.href='{% url "get_revenue" user.id next_month next_year %}'">Next</button>
+                    {% endif %}
+                </div>
+                <table >
+                    <tr >
+                        <th >Sunday</th>
+                        <th >Monday</th>
+                        <th >Tuesday</th>
+                        <th >Wednesday</th>
+                        <th >Thursday</th>
+                        <th >Friday</th>
+                        <th >Saturday</th>
+                    </tr>
+                    {% for week in weeks %}
+                    <tr >
+                        {% for day in week %}
+                        <td >
+                            {% if day %}
+                            <p class="date-calendar" >{{day.day | date:"d/m/y"}}</p>
+                            <p >{{day.total_formatted}}</p>
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </table>
+            </div>
+        </div>
+    </div>
+    <div id="right-container" class="col-3 child-main-container">
+        <div id="extra-right-container">
+            <div class="button-item extra" onclick="location.href='{% url "get_home_customer" user.id %}'">
+                <img alt="button icon" src="{% static "img/back.png" %}" class="button-icon" />
+                Back to Customer home
+            </div>
+        </div>
+        <div class="main-right-content">
+            <div class="information-container">
+                <div class="information-item">
+                    <img class="icon-50 information-icon" src="{% static "img/name.png" %}" alt="" />
+                    <p class="information-content" > {{user.name}} </p>
+                </div>
+                <div class="information-item">
+                    <img class="icon-50 information-icon" src="{% static "img/balance.png" %}" alt="" />
+                    <p class="information-content" > {{user.get_formatted_balance}} </p>
+                </div>
+                <div class="information-item">
+                    <img class="icon-50 information-icon" src="{% static "img/address.png" %}" alt="" />
+                    <p class="information-content address" > {{user.get_full_address}} </p>
+                </div>
+                <div class="information-item">
+                    <img class="icon-50 information-icon" src="{% static "img/phone.png" %}" alt="" />
+                    <p class="information-content" > {{user.phone}} </p>
+                </div>
+                <div class="information-item">
+                    <img class="icon-50 information-icon" src="{% static "img/time.png" %}" alt="" />
+                    <p class="information-content" > {{user.created_at | date:"h:m d/m/Y"}} </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock content %}
-{% block script %}{% endblock script %}
+{% block script %}
+<script src="{% static "js/selling_system.js" %}"></script>
+{% endblock script %}

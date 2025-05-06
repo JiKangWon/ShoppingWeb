@@ -1,6 +1,16 @@
 {% extends "base/base.html" %}
+{% load static %}
 {% block style %}{% endblock style %}
 {% block content %}
-
+<a href="{% url "get_setting" user.id %}">Back to setting </a>
+<p >Balance: {{user.balance}} </p>
+{% for order in orders %}
+<div class="order-container">
+    <h3 > {{order.product.name}} </h3>
+    <p > Quantity: {{order.quantity}} </p>
+    <p> Total {{order.get_formatted_total}} </p>
+    <p > Bought: {{order.order.created_at | date:"h:m d-m-Y"}} </p>
+</div>
+{% endfor %}
 {% endblock content %}
 {% block script %}{% endblock script %}

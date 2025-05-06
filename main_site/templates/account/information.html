@@ -1,0 +1,28 @@
+{% extends "base/base.html" %}
+{% load static %}
+{% block style %}
+
+{% endblock style %}
+{% block content %}
+{% comment %} todo: 1. Viết Form hiện các thuộc tính của người dùng {% endcomment %}
+<form method="post">
+    {% csrf_token %}
+    <label for="name">Name</label>
+    <input type="text" name="name" id="name" value="{{user.name}}" />
+    <label for="phone">Phone</label>
+    <input type="text" name="phone" id="phone" value="{{user.phone}}" />
+    <label for="address-number">Address number</label>
+    <input type="text" name="address-number" id="address-number" value={{user.address_number}} />
+    <label for="address-id">Address</label>
+    <select name="address-id" id="address-id">
+        <option value="{{user.address.id}}"> {{user.address.get_full_address}} </option>
+        {% for address in addresses %}
+        <option value="{{address.id}}">{{address.get_full_address}}</option>
+        {% endfor %}
+    </select>
+    <button type="submit">Save</button>
+</form>
+{% endblock content %}
+{% block script %}
+
+{% endblock script %}

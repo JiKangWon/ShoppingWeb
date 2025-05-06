@@ -1,37 +1,45 @@
 {% extends "base/base.html" %}
-{% block style %}{% endblock style %}
+{% load static %}
+{% block style %}
+<link rel="stylesheet" href="{% static "css/selling_system.css" %}" />
+{% endblock style %}
 {% block content %}
 <form method='post' enctype="multipart/form-data">
     {% csrf_token %}
-    <label for="name">
-        Name:
-        <input type="text" name="name" id="name" required />
-    </label>
-    <label for="description">
-        Description:
-        <textarea name="description" id="description" required></textarea>
-    </label>
-    <label for="price">
-        Price:
-        <input type="number" name="price" id="price" required />
-    </label>
-    <label for="quantity">
-        Quantity:
-        <input type="number" name="quantity" id="quantity" required />
-    </label>
-    <label for="category">
-        Category:
-        <select name='category' id="category" required>
-            {% for category in categories %}
-            <option value="{{category.id}}">{{ category.name }}</option>
-            {% endfor %}
-        </select>
-    </label>
-    <label for="images">
-        Image:
-        <input type="file" name="images" id="images" accept="image/*" multiple />
-    </label>
-    <button type="submit">SAVE</button>
+    <div class="form-container">
+        <label for="name">
+            Name:
+            <input type="text" name="name" id="name" required />
+        </label>
+        <label for="description">
+            Description:
+            <textarea name="description" id="description" required></textarea>
+        </label>
+        <label for="price">
+            Price:
+            <input type="number" name="price" id="price" required />
+        </label>
+        <label for="quantity">
+            Quantity:
+            <input type="number" name="quantity" id="quantity" required />
+        </label>
+        <label for="category">
+            Category:
+            <select name='category' id="category" required>
+                {% for category in categories %}
+                <option value="{{category.id}}">{{ category.name }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <label for="images">
+            Image:
+            <input type="file" name="images" id="images" accept="image/*" class="choose-img" multiple />
+        </label>
+        <button type="submit" id="form-button">SAVE</button>
+    </div>
 </form>
 {% endblock content %}
-{% block script %}{% endblock script %}
+{% block script %}
+<script src="{% static "js/selling_system.js" %}"></script>
+{% endblock script %}
+

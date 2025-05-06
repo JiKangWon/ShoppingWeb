@@ -1,27 +1,82 @@
 {% extends "base/base.html" %}
-{% block style %}{% endblock style %}
+{% load static %}
+{% block style %}
+<link rel="stylesheet" href="{% static "css/selling_system.css" %}" />
+{% endblock style %}
 {% block content %}
-SELLER HOME {{user.name}}
-<button onclick="add_product({{user.id}})">Add a new product</button>
-<a href="{% url "get_product_list" user.id %}">My products</a>
-<a href="{% url "get_selling_history" user.id month year %}">Selling History</a>
-<a href="{% url "get_revenue" user.id month year %}">Revenue</a>
-<a href="{% url "get_home_customer" user.id %}">Back to Customer's page</a>
+
+<div id="main-container" class="row">
+    <div id="left-container" class="col-2 child-main-container">
+        <div id="main-icon-container">
+            <img src="{% static "img/chatbot2.jpg" %}" alt="main icon" id="main-icon" />
+            <p class="main-title-container">SELLING SYSTEM</p>
+            <p class="user-name-container"> User: {{user.name}} </p>
+        </div>
+        <div id="button-container">
+            <div class="button-item selected" onclick="location.href='{% url "get_home_seller" user.id %}'" >
+                <img alt="button icon" src="{% static "img/home.png" %}" class="button-icon" />
+                Home
+            </div>
+            <div class="button-item" onclick="add_product({{user.id}})">
+                <img alt="button icon" src="{% static "img/add.png" %}" class="button-icon" />
+                New product
+            </div>
+            <div class="button-item" onclick="location.href='{% url "get_product_list" user.id %}'">
+                <img alt="button icon" src="{% static "img/product.png" %}" class="button-icon" />
+                My products
+            </div>
+            <div class="button-item" onclick="location.href='{% url "get_selling_history" user.id month year %}'">
+                <img alt="button icon" src="{% static "img/history.png" %}" class="button-icon" />
+                Selling history
+            </div>
+            <div class="button-item" onclick="location.href='{% url "get_revenue" user.id month year %}'" >
+                <img alt="button icon" src="{% static "img/revenue.png" %}" class="button-icon" />
+                Revenue
+            </div>
+        </div>
+        <div id="extra-left-container">
+            
+        </div>
+    </div>
+    <div id="body-container" class="col-7 child-main-container">
+        <div class="body-content">
+            
+        </div>
+    </div>
+    <div id="right-container" class="col-3 child-main-container">
+        <div id="extra-right-container">
+            <div class="button-item extra" onclick="location.href='{% url "get_home_customer" user.id %}'">
+                <img alt="button icon" src="{% static "img/back.png" %}" class="button-icon" />
+                Back to Customer home
+            </div>
+        </div>
+        <div class="main-right-content">
+            <div class="information-container">
+                <div class="information-item">
+                    <img class="icon-50 information-icon" src="{% static "img/name.png" %}" alt="" />
+                    <p class="information-content" > {{user.name}} </p>
+                </div>
+                <div class="information-item">
+                    <img class="icon-50 information-icon" src="{% static "img/balance.png" %}" alt="" />
+                    <p class="information-content" > {{user.get_formatted_balance}} </p>
+                </div>
+                <div class="information-item">
+                    <img class="icon-50 information-icon" src="{% static "img/address.png" %}" alt="" />
+                    <p class="information-content address" > {{user.get_full_address}} </p>
+                </div>
+                <div class="information-item">
+                    <img class="icon-50 information-icon" src="{% static "img/phone.png" %}" alt="" />
+                    <p class="information-content" > {{user.phone}} </p>
+                </div>
+                <div class="information-item">
+                    <img class="icon-50 information-icon" src="{% static "img/time.png" %}" alt="" />
+                    <p class="information-content" > {{user.created_at | date:"h:m d/m/Y"}} </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock content %}
 {% block script %}
-<script >
-    function add_product(user_id) {
-        const add_product_window = window.open(
-            `/seller/product/add/${user_id}/`,
-            'New product',
-            'width=1000,height=500,left=0,top=0',
-        )
-        let interval = setInterval(function () {
-            if (add_product_window.closed) {
-                clearInterval(interval); // Dừng kiểm tra khi cửa sổ bị đóng
-                location.reload();
-            }
-        }, 1000); // Kiểm tra mỗi giây
-    }
-</script>
+<script src="{% static "js/selling_system.js" %}"></script>
 {% endblock script %}

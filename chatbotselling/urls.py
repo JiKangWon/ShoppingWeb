@@ -27,6 +27,9 @@ urlpatterns = [
     path('', views.get_login, name='get_login'),
     path('register/', views.get_register, name='get_register'),
     path('setting/<int:user_id>/', views.get_setting, name='get_setting'),
+    path('account/password/change/<int:user_id>/', views.get_change_password, name='get_change_password'),
+    path('account/information/<int:user_id>/', views.get_information, name="get_information"),
+    # Todo: Viết các hàm trong view cho nhóm trang account
     # ! CUSTOMER:
     path('customer/home/<int:user_id>/', views.get_home_customer, name='get_home_customer'),
     path('customer/cart/<int:user_id>/', views.get_cart, name='get_cart'),
