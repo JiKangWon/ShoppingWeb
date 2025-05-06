@@ -2,7 +2,10 @@
 {% load static %}
 {% block style %}
 <link rel="stylesheet" href="{% static "css/chatbot.css" %}" />
+
+
 {% endblock style %}
+
 {% block content %}
     <script src="{% static "js/chatbot.js" %}"></script>
     <!-- Icon chatbot -->
@@ -30,34 +33,56 @@
             <button onclick="SendMessage({{user.id}})">Send</button>
         </div>
     </div>
-<input type="text" id="query" name="query" placeholder="Search products..." required>
-<button type="button" onclick="get_search_product({{user.id}})">Search</button>
-<a href="{% url "get_setting" user.id %}">Setting</a>
-<a href="{% url "get_cart" user.id %}">Cart</a>
-<a href="{% url "get_favorite_list" user.id %}">Favorite</a>
-<div class="product-grid" id="product-grid">
-    {% for product_data in init_product_data_list %}
-    <div class="product-item" data-product-id="{{ product_data.product.id }}">
-        <a href="{% url "get_product_view_customer" user.id product_data.product.id %}">Detail</a>
-        <img src="{{ product_data.image.image.url }}" alt="{{ product_data.product.name }}" style="width: 600px;" />
-        <h3>{{ product_data.product.name }}</h3>
-        <p>Price: {{ product_data.product.get_price_formatted }}</p>
-        <p>{{ product_data.product.get_sold }} sold </p>
-        <button type="button" onclick="add_to_cart({{user.id}},{{product_data.product.id}})">Add to cart</button>
-        <button type="button" onclick="like(this, {{user.id}},{{product_data.product.id}})">
-            {% if product_data.like %}
-            Unlike
-            {% else %}
-            Like
-            {% endif %}
-        </button>
+    <div class="container mt-4">
+    <!-- Form tìm kiếm -->
+    <div class="input-group mb-3">
+        <input type="text" class="form-control" id="query" name="query" placeholder="Search products..." required>
+        <button class="btn btn-primary" type="button" onclick="get_search_product({{user.id}})">Search</button>
     </div>
-    {% empty %}
-    <p>No products available.</p>
-    {% endfor %}
+
+    <!-- Các liên kết -->
+    <div class="d-flex mb-3">
+        <a href="{% url 'get_setting' user.id %}" class="btn btn-secondary me-2">Setting</a>
+        <a href="{% url 'get_cart' user.id %}" class="btn btn-secondary me-2">Cart</a>
+        <a href="{% url 'get_favorite_list' user.id %}" class="btn btn-secondary">Favorite</a>
+    </div>
+
+    <!-- Hiển thị sản phẩm -->
+    <div class="row" id="product-grid">
+        {% for product_data in init_product_data_list %}
+        <div class="col-md-3 mb-4">
+            <div class="card">
+                <a href="{% url 'get_product_view_customer' user.id product_data.product.id %}">
+                    <img src="{{ product_data.image.image.url }}" alt="{{ product_data.product.name }}" class="card-img-top" style="width: 100%; height: 200px; object-fit: cover;">
+                </a>
+                <div class="card-body">
+                    <h5 class="card-title">{{ product_data.product.name }}</h5>
+                    <p class="card-text">Price: {{ product_data.product.get_price_formatted }}</p>
+                    <p class="card-text">{{ product_data.product.get_sold }} sold</p>
+                    <button class="btn btn-success" type="button" onclick="add_to_cart({{user.id}},{{product_data.product.id}})">Add to cart</button>
+                    <button class="btn btn-outline-danger mt-2" type="button" onclick="like(this, {{user.id}},{{product_data.product.id}})">
+                        {% if product_data.like %}
+                        Unlike
+                        {% else %}
+                        Like
+                        {% endif %}
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <p class="text-center">No products available.</p>
+        {% endfor %}
+    </div>
+
+    <!-- Nút xem thêm -->
+    <div class="text-center mt-3">
+        <button class="btn btn-primary" id="see-more-btn" onclick="loadMoreProducts({{user.id}})">See more</button>
+    </div>
+
+    <!-- Thông báo lỗi -->
+    <div class="alert alert-danger mt-3" id="error-message" style="display: none;"></div>
 </div>
-<button id="see-more-btn" onclick="loadMoreProducts({{user.id}})">See more</button>
-<div class="error-message" id="error-message"></div>
 
 
 
@@ -114,7 +139,6 @@ function like(button, user_id, product_id){
         alert("An error occurred: " + error.message);
     })
 }
-
 function loadMoreProducts(user_id) {
     const button = document.getElementById('see-more-btn');
     const productGrid = document.getElementById('product-grid');
@@ -143,21 +167,25 @@ function loadMoreProducts(user_id) {
     .then(data => {
         data.products.forEach(product => {
             const productItem = document.createElement('div');
-            productItem.className = 'product-item';
-            productItem.setAttribute('data-product-id', product.id);
+            productItem.className = 'col-md-3 mb-4';
             productItem.innerHTML = `
-                <a href="/customer/product/view/${user_id}/${product.id}/">Detail</a>
-                <img src="${product.image_url}" alt="${product.name} " style="width: 600px;" />
-                <h3>${product.name}</h3>
-                <p>Price: $${product.price}</p>
-                <p>${product.sold} sold</p>
-                <button type="button" onclick="add_to_cart(${user_id},${product.id})">Add to cart</button>
-                <button type="button" onclick="like(this, ${user_id},${product.id})">${product.like_button_text}</button>
+                <div class="card">
+                    <a href="/customer/product/view/${user_id}/${product.id}/">
+                        <img src="${product.image_url}" alt="${product.name}" class="card-img-top" style="width: 100%; height: 200px; object-fit: cover;">
+                    </a>
+                    <div class="card-body">
+                        <h5 class="card-title">${product.name}</h5>
+                        <p class="card-text">Price: ${product.price_formatted}</p>
+                        <p class="card-text">${product.sold} sold</p>
+                        <button class="btn btn-success" type="button" onclick="add_to_cart(${user_id}, ${product.id})">Add to cart</button>
+                        <button class="btn btn-outline-danger mt-2" type="button" onclick="like(this, ${user_id}, ${product.id})">${product.like_button_text}</button>
+                    </div>
+                </div>
             `;
             productGrid.appendChild(productItem);
         });
 
-        offset += 20;  // Tăng offset để lần tải tiếp theo lấy các sản phẩm tiếp theo
+        offset += 20; // Tăng offset để lấy thêm sản phẩm
         hasMore = data.has_more;
 
         if (!hasMore) {
@@ -189,6 +217,7 @@ function get_search_product(user_id){
     errorElement.textContent = '';
     productGrid.innerHTML = '';  // Xóa nội dung hiện tại của grid sản phẩm
     offset = 0;  // Đặt lại offset để bắt đầu tải lại từ đầu
+
     fetch(`/get_search_product/${search_value}/${offset}/${user_id}/`, {
         method: 'GET',
         headers: {
@@ -204,21 +233,25 @@ function get_search_product(user_id){
     .then(data => {
         data.products.forEach(product => {
             const productItem = document.createElement('div');
-            productItem.className = 'product-item';
-            productItem.setAttribute('data-product-id', product.id);
+            productItem.className = 'col-md-3 mb-4'; // Đảm bảo giống loadMoreProducts
             productItem.innerHTML = `
-                <a href="/customer/product/view/${user_id}/${product.id}/">Detail</a>
-                <img src="${product.image_url}" alt="${product.name} " style="width: 600px;" />
-                <h3>${product.name}</h3>
-                <p>Price: $${product.price}</p>
-                <p>${product.sold} sold</p>
-                <button type="button" onclick="add_to_cart(${user_id},${product.id})">Add to cart</button>
-                <button type="button" onclick="like(this, ${user_id},${product.id})">${product.like_button_text}</button>
+                <div class="card">
+                    <a href="/customer/product/view/${user_id}/${product.id}/">
+                        <img src="${product.image_url}" alt="${product.name}" class="card-img-top" style="width: 100%; height: 200px; object-fit: cover;">
+                    </a>
+                    <div class="card-body">
+                        <h5 class="card-title">${product.name}</h5>
+                        <p class="card-text">Price: ${product.price_formatted}</p>
+                        <p class="card-text">${product.sold} sold</p>
+                        <button class="btn btn-success" type="button" onclick="add_to_cart(${user_id}, ${product.id})">Add to cart</button>
+                        <button class="btn btn-outline-danger mt-2" type="button" onclick="like(this, ${user_id}, ${product.id})">${product.like_button_text}</button>
+                    </div>
+                </div>
             `;
             productGrid.appendChild(productItem);
         });
 
-        offset += 20;  // Tăng offset để lần tải tiếp theo lấy các sản phẩm tiếp theo
+        offset += 20;  // Tăng offset để lấy thêm sản phẩm nếu cần
         hasMore = data.has_more;
 
         if (!hasMore) {
@@ -234,5 +267,6 @@ function get_search_product(user_id){
         button.disabled = false;
     });
 }
+
 </script>
 {% endblock script %}

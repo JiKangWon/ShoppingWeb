@@ -1,80 +1,92 @@
 {% extends "base/base.html" %}
-{% block style %}{% endblock style %}
+
+{% block style %}
+<!-- Liên kết Bootstrap -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+<style>
+    body {
+        background-color: #007bff; /* Xanh nước biển */
+        color: white;
+        font-family: Arial, sans-serif;
+    }
+
+    #main-container {
+        max-width: 800px;
+        margin: auto;
+        background-color: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+        color: #333;
+    }
+
+    img {
+        display: block;
+        margin: auto;
+        border-radius: 8px;
+    }
+
+    h1, h2, h4 {
+        text-align: center;
+        color: #0056b3;
+    }
+
+    p {
+        font-size: 1rem;
+        line-height: 1.6;
+    }
+
+    .btn-primary {
+        background-color: #004080;
+        border-color: #003366;
+        width: 100%;
+    }
+
+    .btn-primary:hover {
+        background-color: #003366;
+    }
+
+    .btn-outline-danger {
+        width: 100%;
+    }
+</style>
+{% endblock style %}
+
 {% block content %}
 <div id="main-container">
     {% for image in product.images %}
-    <img src="{{image.image.url}}" alt="{{product.name}}" style="width:600px;" >
+    <img src="{{image.image.url}}" alt="{{product.name}}" class="img-fluid" style="width:600px;">
     {% endfor %}
-    <h1 > {{product.name}} </h1>
-    <h2 >PRICE: {{product.price}} </h2>
-    <button type="button" onclick="add_to_cart({{user.id}}, {{product.id}})">Cart</button>
-    <button type="button" onclick="like(this, {{user.id}}, {{product.id}})">
-        {% if like %}
-        Unlike
-        {% else %}
-        Like
-        {% endif %}
-    </button>
-    <a href="{% url "get_shop" user.id product.seller_id %}"> {{product.seller_name}}'s shop </a>
-    <h2 >DESCRIPTION</h2>
-    <h4 > {{product.category}} </h4>
-    <p style="white-space: pre-wrap;"> {{product.description}} </p>
-    <h2 >COMMENTS</h2>
+    <h1>{{product.name}}</h1>
+    <h2>PRICE: {{product.price}}</h2>
+    
+    <div class="d-flex gap-2 justify-content-center my-3">
+        <button class="btn btn-primary" type="button" onclick="add_to_cart({{user.id}}, {{product.id}})">Cart</button>
+        <button class="btn btn-outline-danger" type="button" onclick="like(this, {{user.id}}, {{product.id}})">
+            {% if like %}
+            Unlike
+            {% else %}
+            Like
+            {% endif %}
+        </button>
+    </div>
+
+    <div class="text-center">
+        <a href="{% url 'get_shop' user.id product.seller_id %}" class="btn btn-secondary">{{product.seller_name}}'s shop</a>
+    </div>
+
+    <h2>DESCRIPTION</h2>
+    <h4>{{product.category}}</h4>
+    <p style="white-space: pre-wrap;">{{product.description}}</p>
+
+    <h2>COMMENTS</h2>
     {% for order_product in product.order_product_list %}
     {% if order_product.review %}
-    <h5 >{{order_product.order.user.name}} </h5>
-    <p > {{order_product.review}} </p>    
+    <div class="bg-light p-3 rounded my-2">
+        <h5 class="text-primary">{{order_product.order.user.name}}</h5>
+        <p>{{order_product.review}}</p>    
+    </div>
     {% endif %}
     {% endfor %}
 </div>
 {% endblock content %}
-{% block script %}
-<script >
-function add_to_cart(user_id, product_id){
-    fetch(`/add_to_cart/${user_id}/${product_id}/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCSRFToken(),
-            },
-        }).then(response => {
-            if (!response.ok){
-                throw new Error(`HTTP error with status: ${response.status}`);
-            }
-            return response.json(); 
-        }).then(data => {
-            if (data.success){
-                alert(data.message);
-            } else {
-                alert("Failed to add product to cart: " + data.error);
-            }
-        }).catch(error => {
-            alert("An error occurred: " + error.message);
-        })
-}
-
-function like(button, user_id, product_id){
-    fetch(`/like/${user_id}/${product_id}/`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCSRFToken(),
-        },
-    }).then(response => {
-        if (!response.ok){
-            throw new Error(`HTTP error with status: ${response.status}`);
-        }
-        return response.json();
-    }).then(data => {
-        if (data.success){
-            alert(data.message);
-            button.innerHTML = data.button_text;
-        } else {
-            alert("Failed to like product: " + data.error);
-        }
-    }).catch(error => {
-        alert("An error occurred: " + error.message);
-    })
-}
-</script>
-{% endblock script %}
