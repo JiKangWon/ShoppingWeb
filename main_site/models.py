@@ -138,3 +138,11 @@ class Chat(models.Model):
 class User_Face(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     face = models.ImageField(upload_to='face_images/', null=True, blank=True)
+
+class Edge(models.Model):
+    start    = models.ForeignKey(Address, related_name='edges_out', on_delete=models.CASCADE)
+    end      = models.ForeignKey(Address, related_name='edges_in',  on_delete=models.CASCADE)
+    distance = models.FloatField(help_text="Khoảng cách giữa 2 đỉnh (ví dụ km)")
+
+    def __str__(self):
+        return f'{self.start.id} → {self.end.id} = {self.distance}'

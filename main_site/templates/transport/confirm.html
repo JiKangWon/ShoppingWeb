@@ -1,0 +1,22 @@
+{% extends "base/base.html" %}
+{% load static %}   
+{% block style %}
+<link rel="stylesheet" href="css/transport.css" />
+{% endblock style %}
+{% block content %}
+<form method="POST">
+    {% csrf_token %}
+    <label for="order">
+        Enter the ID of order:
+    </label>
+    <input type="number" id="order" name="order" required />
+    <label for="transport">
+        Enter the ID of transport place:
+    </label>
+    <input type="number" id="address" name="address" required />
+    <button type="submit">Confirm</button>
+</form>
+{% endblock content %}
+{% block script %}
+
+{% endblock script %}

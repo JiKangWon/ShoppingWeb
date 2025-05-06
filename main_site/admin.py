@@ -4,7 +4,7 @@ from .models import *
 # Register your models here.
 @admin.register(Address)
 class AddressAdmin(admin.ModelAdmin):
-    list_display = ('country', 'province', 'district', 'ward', 'street')
+    list_display = ('id', 'country', 'province', 'district', 'ward', 'street')
     search_fields = ('country', 'province', 'district', 'ward', 'street')
 
 @admin.register(User)
@@ -34,7 +34,7 @@ class OrderAdmin(admin.ModelAdmin):
 
 @admin.register(Order_Product)
 class OrderProductAdmin(admin.ModelAdmin):
-    list_display = ('order', 'product', 'quantity')
+    list_display = ('id','order', 'product', 'quantity', 'current_location')
     search_fields = ('order__user__username', 'product__name')
     list_filter = ('order', 'product')
 
@@ -63,3 +63,7 @@ class ChatAdmin(admin.ModelAdmin):
 @admin.register(User_Face)
 class User_FaceAdmin(admin.ModelAdmin):
     list_display = ('id','user')
+
+@admin.register(Edge)
+class EdgeAdmin(admin.ModelAdmin):
+    list_display('id', 'start', 'end', 'distance')

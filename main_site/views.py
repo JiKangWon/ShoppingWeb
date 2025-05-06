@@ -12,6 +12,7 @@ import base64
 from django.conf import settings
 import logging
 import os
+from .graph import dijkstra
 # Create your views here.
 
 # ! FACE ID:
@@ -341,7 +342,7 @@ def get_identification(request, user_id):
                 quantity = cart.quantity,
             )
             cart.delete() 
-        return redirect('get_history', user_id)
+        return redirect('purchase_product', user_id)
     context['error']=error
     return render(request, 'customer/identification.html', context)
 
@@ -815,3 +816,54 @@ def delete_product_image(request, product_image_id):
 
 def get_test(request):
     return render(request,'test/test.html',context={})
+
+#! TRANSPORT:
+def get_confirm_location(request):
+    context={}
+    error = None
+    if request.method == "POST":
+        order_product_id = int(request.POST.get('order'))
+        address_id = int(request.POST.get('address'))
+        order_product = Order_Product.objects.filter(id=order_product_id).first()
+        address = Address.objects.filter(id=address_id).first()
+        order_product.current_location = address
+        order_product.save()
+    context['error']=error
+    return render(request, 'transport/confirm.html', context)
+
+def purchase_product(request, order_product_id):
+    # 1. Lấy sản phẩm và người dùng
+    op = Order_Product.objects.filter(id=order_product_id).first()
+    order = op.order
+    product = op.product
+    buyer   = order.user
+
+    # 3. Lấy danh sách tất cả cạnh
+    edges = Edge.objects.all()
+
+    # 4. Tính đường đi ngắn nhất từ seller.address → buyer.address
+    start_id = product.seller.address_id
+    end_id   = buyer.address_id
+    path_ids = dijkstra(start_id, end_id, edges)
+
+    # 5. Lấy đối tượng Address theo path_ids để hiển thị
+    from .models import Address
+    if path_ids:
+        path_addresses = Address.objects.filter(id__in=path_ids).order_by(
+            # giữ đúng thứ tự theo path_ids
+            models.Case(*[
+              models.When(id=pk, then=pos) for pos, pk in enumerate(path_ids)
+            ])
+        )
+    else:
+        path_addresses = []
+
+    return render(request, 'orders/purchase_result.html', {
+        'order'          : order,
+        'order_product'  : op,
+        'shortest_path'  : path_addresses,
+        'total_distance' : sum(
+            Edge.objects.get(start_id=path_ids[i], end_id=path_ids[i+1]).distance
+            for i in range(len(path_ids)-1)
+        ) if path_ids else None,
+    })

@@ -1,0 +1,72 @@
+{% extends 'base/base.html' %}
+{% load static %}
+{% block style %}
+<style>
+.path-container {
+  display: flex;
+  align-items: center;
+  margin: 20px 0;
+}
+.node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 10px;
+}
+.node-content {
+  background: #f9f9f9;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  padding: 10px;
+  text-align: center;
+  min-width: 120px;
+}
+.label {
+  font-weight: bold;
+  display: block;
+  margin-bottom: 5px;
+}
+.address-text {
+  font-size: 0.9em;
+  color: #555;
+}
+.connector {
+  flex-grow: 1;
+  height: 2px;
+  background: #ccc;
+}
+</style>
+{% endblock style %}
+{% block content %}
+<h2>Chi tiết đơn hàng #{{ order.id }}</h2>
+<p><strong>Sản phẩm:</strong> {{ order_product.product.name }}</p>
+<p><strong>Người bán:</strong> {{ order_product.product.seller.name }}</p>
+<p><strong>Người mua:</strong> {{ order.user.name }}</p>
+
+<h3>Lộ trình giao hàng</h3>
+<div class="path-container">
+  {% for addr in shortest_path %}
+    <div class="node">
+      <div class="node-content">
+        {% if addr.id == order_product.product.seller.address.id %}
+          <span class="label">Người bán</span>
+        {% elif addr.id == order.user.address.id %}
+          <span class="label">Người mua</span>
+        {% else %}
+          <span class="label">Trung gian</span>
+        {% endif %}
+        <div class="address-text">{{ addr.get_full_address }}</div>
+      </div>
+    </div>
+    {% if not forloop.last %}
+      <div class="connector"></div>
+    {% endif %}
+  {% endfor %}
+</div>
+
+<p><strong>Tổng khoảng cách:</strong> {{ total_distance }} km</p>
+
+{% endblock content%}
+
+
+{% block script %}{% endblock script %}
