@@ -66,4 +66,4 @@ class User_FaceAdmin(admin.ModelAdmin):
 
 @admin.register(Edge)
 class EdgeAdmin(admin.ModelAdmin):
-    list_display('id', 'start', 'end', 'distance')
+    list_display= ('id', 'start', 'end', 'distance')

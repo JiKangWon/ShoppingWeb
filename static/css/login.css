@@ -1,0 +1,52 @@
+body{
+    width: 100vw;
+    height: 100vh;
+    background-image: url(../img/blue-bgr.jpg);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;   
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+h3{
+    color: #fff !important;
+    font-weight: bold;
+}
+form{
+    background-color: rgb(64, 122, 247, 0.6);
+    padding: 20px;
+    border-radius: 20px;
+}
+button{
+    background-color: #2244a2;
+    height: 40px;
+    border-radius: 12px;
+    color: #fff;
+    border: 1px solid #2244a2 ;
+}
+button:hover{
+    background-color: #fff;
+    color: #2244a2;
+}
+label{
+    color: #fff;
+    font-weight: bold;
+}
+#main-logo{
+    width: 80px;
+    height: 80px;
+    border-radius: 20px;
+    margin: 0 10px;
+}
+.intro-order{
+    color: #fff;
+    min-height: 25%;
+    font-weight: bold;
+    font-size: 30px;
+    padding: 5px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}

@@ -70,7 +70,7 @@ urlpatterns = [
     path('user_faces/<int:user_id>/', views.get_faces, name="get_faces"),
     # ! Transport system:
     path('transport/confirm/', views.get_confirm_location, name="get_confirm_location"),
-    path('transport/view/<int:order_product_id>/', views.purchase_product, name="purchase_product"),
+    path('transport/view/<int:order_product_id>/', views.transport_view, name="purchase_product"),
 ] 
 # Serve media files (for User_Face ImageField)
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

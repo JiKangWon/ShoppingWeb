@@ -142,7 +142,6 @@ class User_Face(models.Model):
 class Edge(models.Model):
     start    = models.ForeignKey(Address, related_name='edges_out', on_delete=models.CASCADE)
     end      = models.ForeignKey(Address, related_name='edges_in',  on_delete=models.CASCADE)
-    distance = models.FloatField(help_text="Khoảng cách giữa 2 đỉnh (ví dụ km)")
-
+    distance = models.FloatField(help_text="Khoảng cách giữa 2 đỉnh (km)")
     def __str__(self):
         return f'{self.start.id} → {self.end.id} = {self.distance}'

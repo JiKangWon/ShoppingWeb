@@ -2,7 +2,7 @@
 {% load static %}
 {% block style %}
 <link rel="stylesheet" href="{% static "css/chatbot.css" %}" />
-
+<link rel="stylesheet" href="{% static "css/customer.css" %}" />
 
 {% endblock style %}
 
@@ -33,57 +33,59 @@
             <button onclick="SendMessage({{user.id}})">Send</button>
         </div>
     </div>
-    <div class="container mt-4">
-    <!-- Form tìm kiếm -->
-    <div class="input-group mb-3">
-        <input type="text" class="form-control" id="query" name="query" placeholder="Search products..." required>
-        <button class="btn btn-primary" type="button" onclick="get_search_product({{user.id}})">Search</button>
-    </div>
-
-    <!-- Các liên kết -->
-    <div class="d-flex mb-3">
-        <a href="{% url 'get_setting' user.id %}" class="btn btn-secondary me-2">Setting</a>
-        <a href="{% url 'get_cart' user.id %}" class="btn btn-secondary me-2">Cart</a>
-        <a href="{% url 'get_favorite_list' user.id %}" class="btn btn-secondary">Favorite</a>
-    </div>
-
-    <!-- Hiển thị sản phẩm -->
-    <div class="row" id="product-grid">
-        {% for product_data in init_product_data_list %}
-        <div class="col-md-3 mb-4">
-            <div class="card">
-                <a href="{% url 'get_product_view_customer' user.id product_data.product.id %}">
-                    <img src="{{ product_data.image.image.url }}" alt="{{ product_data.product.name }}" class="card-img-top" style="width: 100%; height: 200px; object-fit: cover;">
-                </a>
-                <div class="card-body">
-                    <h5 class="card-title">{{ product_data.product.name }}</h5>
-                    <p class="card-text">Price: {{ product_data.product.get_price_formatted }}</p>
-                    <p class="card-text">{{ product_data.product.get_sold }} sold</p>
-                    <button class="btn btn-success" type="button" onclick="add_to_cart({{user.id}},{{product_data.product.id}})">Add to cart</button>
-                    <button class="btn btn-outline-danger mt-2" type="button" onclick="like(this, {{user.id}},{{product_data.product.id}})">
-                        {% if product_data.like %}
-                        Unlike
-                        {% else %}
-                        Like
-                        {% endif %}
-                    </button>
+    <div id="main-ctn">
+        <div class="container mt-4">
+        <!-- Form tìm kiếm -->
+        <div class="input-group mb-3">
+            <input type="text" class="form-control" id="query" name="query" placeholder="Search products..." required>
+            <button class="btn btn-primary" type="button" onclick="get_search_product({{user.id}})">Search</button>
+        </div>
+    
+        <!-- Các liên kết -->
+        <div class="d-flex mb-3">
+            <a href="{% url 'get_setting' user.id %}" class="btn btn-primary me-2">Setting</a>
+            <a href="{% url 'get_cart' user.id %}" class="btn btn-primary me-2">Cart</a>
+            <a href="{% url 'get_favorite_list' user.id %}" class="btn btn-primary">Favorite</a>
+        </div>
+    
+        <!-- Hiển thị sản phẩm -->
+        <div class="row" id="product-grid">
+            {% for product_data in init_product_data_list %}
+            <div class="col-md-3 mb-4">
+                <div class="card">
+                    <a href="{% url 'get_product_view_customer' user.id product_data.product.id %}">
+                        <img src="{% if product_data.image %}{{ product_data.image.image.url }}{% else %} {% static "img/chatbot2.jpg" %} {% endif %}" alt="{{ product_data.product.name }}" class="card-img-top" style="width: 100%; height: 200px; object-fit: cover;">
+                    </a>
+                    <div class="card-body">
+                        <h5 class="card-title">{{ product_data.product.name }}</h5>
+                        <p class="card-text">Price: {{ product_data.product.get_price_formatted }}</p>
+                        <p class="card-text">{{ product_data.product.get_sold }} sold</p>
+                        <button class="btn btn-primary" type="button" onclick="add_to_cart({{user.id}},{{product_data.product.id}})">Add to cart</button>
+                        <button class="btn btn-outline-danger mt-2" type="button" onclick="like(this, {{user.id}},{{product_data.product.id}})">
+                            {% if product_data.like %}
+                            Unlike
+                            {% else %}
+                            Like
+                            {% endif %}
+                        </button>
+                    </div>
                 </div>
             </div>
+            {% empty %}
+            <p class="text-center">No products available.</p>
+            {% endfor %}
         </div>
-        {% empty %}
-        <p class="text-center">No products available.</p>
-        {% endfor %}
+    
+        <!-- Nút xem thêm -->
+        <div class="text-center mt-3">
+            <button class="btn btn-primary" id="see-more-btn" onclick="loadMoreProducts({{user.id}})">See more</button>
+        </div>
+    
+        <!-- Thông báo lỗi -->
+        <div class="alert alert-danger mt-3" id="error-message" style="display: none;"></div>
     </div>
-
-    <!-- Nút xem thêm -->
-    <div class="text-center mt-3">
-        <button class="btn btn-primary" id="see-more-btn" onclick="loadMoreProducts({{user.id}})">See more</button>
+    
     </div>
-
-    <!-- Thông báo lỗi -->
-    <div class="alert alert-danger mt-3" id="error-message" style="display: none;"></div>
-</div>
-
 
 
 {% endblock content %}

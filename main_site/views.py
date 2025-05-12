@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, HttpResponse
+from django.core.serializers import serialize
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .models import *
@@ -828,42 +829,33 @@ def get_confirm_location(request):
         address = Address.objects.filter(id=address_id).first()
         order_product.current_location = address
         order_product.save()
+        
     context['error']=error
     return render(request, 'transport/confirm.html', context)
 
-def purchase_product(request, order_product_id):
-    # 1. Lấy sản phẩm và người dùng
-    op = Order_Product.objects.filter(id=order_product_id).first()
-    order = op.order
-    product = op.product
-    buyer   = order.user
-
-    # 3. Lấy danh sách tất cả cạnh
+def transport_view(request, order_product_id):
+    addresses = Address.objects.all()
     edges = Edge.objects.all()
+    order_product = Order_Product.objects.filter(id=order_product_id).first()
+    start_id = order_product.product.seller.address.id
+    end_id = order_product.order.user.address.id
+    # Tìm đường đi ngắn nhất bằng Dijkstra
+    path = dijkstra(start_id, end_id, edges)
 
-    # 4. Tính đường đi ngắn nhất từ seller.address → buyer.address
-    start_id = product.seller.address_id
-    end_id   = buyer.address_id
-    path_ids = dijkstra(start_id, end_id, edges)
+    # Serialize dữ liệu để truyền sang template
+    addresses_data = json.loads(serialize('json', addresses))
+    addresses_data = [{**item['fields'], 'id': item['pk']} for item in addresses_data]
 
-    # 5. Lấy đối tượng Address theo path_ids để hiển thị
-    from .models import Address
-    if path_ids:
-        path_addresses = Address.objects.filter(id__in=path_ids).order_by(
-            # giữ đúng thứ tự theo path_ids
-            models.Case(*[
-              models.When(id=pk, then=pos) for pos, pk in enumerate(path_ids)
-            ])
-        )
-    else:
-        path_addresses = []
+    edges_data = [
+        {'start': edge.start_id, 'end': edge.end_id, 'distance': edge.distance}
+        for edge in edges
+    ]
 
-    return render(request, 'orders/purchase_result.html', {
-        'order'          : order,
-        'order_product'  : op,
-        'shortest_path'  : path_addresses,
-        'total_distance' : sum(
-            Edge.objects.get(start_id=path_ids[i], end_id=path_ids[i+1]).distance
-            for i in range(len(path_ids)-1)
-        ) if path_ids else None,
-    })
+    context = {
+        'addresses': json.dumps(addresses_data),
+        'edges': json.dumps(edges_data),
+        'path': json.dumps(path if path else []),
+        'order':order_product,
+        'current_node':order_product.current_location.id
+    }
+    return render(request, 'transport/view.html', context)
